@@ -116,7 +116,7 @@ fig.update_layout(
     margin=dict(l=0, r=0, t=0, b=0),
     legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0),
 )
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")
 
 # ---------------------------------------------------------------- Tableau
 st.markdown("#### Détail des agences affichées")
@@ -135,7 +135,7 @@ if df_table.empty:
 else:
     st.dataframe(
         df_table,
-        use_container_width=True,
+        width="stretch",
         height=300,
         column_config={
             "Opérateur": st.column_config.TextColumn(width="small"),

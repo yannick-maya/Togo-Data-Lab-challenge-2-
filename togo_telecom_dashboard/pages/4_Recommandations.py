@@ -101,7 +101,7 @@ fig = px.bar(
     height=500,
 )
 fig.update_layout(yaxis=dict(autorange="reversed"), legend=dict(orientation="h", yanchor="bottom", y=1.01))
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")
 
 st.divider()
 
@@ -158,7 +158,7 @@ df_table = pref[
 
 st.dataframe(
     df_table,
-    use_container_width=True,
+    width="stretch",
     height=400,
     column_config={
         "Région": st.column_config.TextColumn(width="small"),

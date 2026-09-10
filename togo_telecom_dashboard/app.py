@@ -18,7 +18,7 @@ from src.style_loader import inject_styles, sidebar_brand
 from src.utils import format_int
 
 st.set_page_config(
-    page_title="Diagnostic Telecoms & Inclusion Numerique — Togo",
+    page_title="Diagnostic Télécoms & Inclusion Numérique — Togo",
     page_icon="📡",
     layout="wide",
 )
@@ -89,7 +89,7 @@ with left:
             margin=dict(l=0, r=0, t=0, b=0),
             legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0),
         )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 with right:
     st.markdown("#### Comment lire ce dashboard")

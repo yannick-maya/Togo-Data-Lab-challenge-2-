@@ -84,7 +84,7 @@ with st.spinner("Construction de la carte…"):
         margin=dict(l=0, r=0, t=0, b=0),
         legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0),
     )
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")
 
 st.divider()
 
@@ -106,7 +106,7 @@ else:
             "region_nom_bdd": "Région", "prefecture_nom_bdd": "Préfecture", "canton_nom_bdd": "Canton",
             "nb_agences": "Nb agences", "nb_agents_mobile_money": "Nb agents MM",
         }),
-        use_container_width=True,
+        width="stretch",
         height=min(420, 40 + len(top) * 30),
         column_config={
             "Région": st.column_config.TextColumn(width="small"),
@@ -134,4 +134,4 @@ fig_bar = px.bar(
     height=max(350, len(by_pref) * 30),
 )
 fig_bar.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.01))
-st.plotly_chart(fig_bar, use_container_width=True)
+st.plotly_chart(fig_bar, width="stretch")

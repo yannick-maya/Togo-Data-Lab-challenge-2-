@@ -60,7 +60,7 @@ with st.spinner("Construction de la carte choroplèthe…"):
         labels={"agents_mm_pour_10k_hab": "Agents / 10k hab."},
     )
     fig_map.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-st.plotly_chart(fig_map, use_container_width=True)
+st.plotly_chart(fig_map, width="stretch")
 
 st.divider()
 
@@ -79,7 +79,7 @@ with col1:
         labels={"agents_mm_pour_10k_hab": "Agents mobile money / 10 000 hab.", "prefecture": ""},
     )
     fig_bar.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.01))
-    st.plotly_chart(fig_bar, use_container_width=True)
+    st.plotly_chart(fig_bar, width="stretch")
 
 with col2:
     st.markdown("#### Population vs nombre d'agents mobile money")
@@ -103,7 +103,7 @@ with col2:
         type="line", x0=0, y0=0, x1=xmax, y1=xmax * moyenne_nationale,
         line=dict(dash="dash", color="gray"),
     )
-    st.plotly_chart(fig_sc, use_container_width=True)
+    st.plotly_chart(fig_sc, width="stretch")
 
 # ---------------------------------------------------------------- Tableau
 st.markdown("#### Table détaillée")
@@ -119,7 +119,7 @@ df_table = pref_f[
 
 st.dataframe(
     df_table,
-    use_container_width=True,
+    width="stretch",
     height=340,
     column_config={
         "Région": st.column_config.TextColumn(width="small"),
