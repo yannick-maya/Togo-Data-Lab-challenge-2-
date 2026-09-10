@@ -1,0 +1,232 @@
+/* ================================================================
+   Togo Telecom Dashboard — Centralized Stylesheet
+   Loaded once per page via src/style_loader.py
+   ================================================================ */
+
+/* ---------- Typography & Headings ---------- */
+h1 {
+    font-size: 1.75rem !important;
+    font-weight: 700 !important;
+    margin-bottom: 0.25rem !important;
+    color: #1A1A2E !important;
+}
+
+h2 {
+    font-size: 1.35rem !important;
+    font-weight: 600 !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.5rem !important;
+    color: #1A1A2E !important;
+}
+
+h3 {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    margin-top: 1.2rem !important;
+    margin-bottom: 0.4rem !important;
+    color: #2C3E50 !important;
+}
+
+/* Section titles inside pages (st.markdown("#### ...")) */
+h4 {
+    font-size: 1.0rem !important;
+    font-weight: 600 !important;
+    margin-top: 1.1rem !important;
+    margin-bottom: 0.35rem !important;
+    color: #0072BC !important;
+    letter-spacing: 0.01em;
+}
+
+/* ---------- KPI Cards ---------- */
+div[data-testid="stMetric"] {
+    background: #FFFFFF;
+    border: 1px solid #E8ECF1;
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s ease;
+}
+
+div[data-testid="stMetric"]:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+}
+
+div[data-testid="stMetric"] label {
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    color: #5A6A7A !important;
+    letter-spacing: 0.01em;
+}
+
+div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+    font-size: 1.55rem !important;
+    font-weight: 700 !important;
+    color: #0072BC !important;
+}
+
+div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
+    font-size: 0.82rem !important;
+}
+
+/* ---------- KPI Row Wrapper ---------- */
+.kpi-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.kpi-row > div {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ---------- Section Cards (map, content boxes) ---------- */
+.section-card {
+    background: #FFFFFF;
+    border: 1px solid #E8ECF1;
+    border-radius: 10px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    margin-bottom: 1rem;
+}
+
+/* ---------- Sidebar ---------- */
+section[data-testid="stSidebar"] {
+    background-color: #F8FAFD !important;
+}
+
+section[data-testid="stSidebar"] .stMarkdown h1,
+section[data-testid="stSidebar"] .stMarkdown h2 {
+    font-size: 1.05rem !important;
+    margin-bottom: 0.3rem !important;
+}
+
+section[data-testid="stSidebar"] hr {
+    border: none;
+    border-top: 1px solid #D1D9E6;
+    margin: 0.75rem 0;
+}
+
+/* ---------- Sidebar Brand Banner ---------- */
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 0.4rem 0.75rem;
+    border-bottom: 1px solid #D9E1EA;
+    margin: 0 0.25rem 0.5rem;
+}
+
+.sidebar-brand-icon {
+    font-size: 1.9rem;
+    line-height: 1;
+}
+
+.sidebar-brand-title {
+    font-weight: 700;
+    color: #0072BC;
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.sidebar-brand-sub {
+    font-size: 0.72rem;
+    color: #5A6A7A;
+    line-height: 1.25;
+    margin-top: 0.1rem;
+}
+
+/* ---------- Filter Section Title ---------- */
+.filter-title {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.76rem;
+    color: #1A1A2E;
+    margin: 0.9rem 0 0.2rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid #E6EBF1;
+}
+
+/* ---------- Dataframe Tables ---------- */
+div[data-testid="stDataFrame"] {
+    border: 1px solid #E8ECF1;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* ---------- Executive Summary Cards ---------- */
+.exec-card {
+    background: linear-gradient(135deg, #0072BC 0%, #005A9E 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(0, 114, 188, 0.25);
+}
+
+.exec-card .exec-value {
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0.5rem 0 0.25rem;
+    color: #FFFFFF;
+}
+
+.exec-card .exec-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0.9;
+    color: #FFFFFF;
+}
+
+.exec-card-red {
+    background: linear-gradient(135deg, #D7263D 0%, #A61B2E 100%) !important;
+    box-shadow: 0 4px 12px rgba(215, 38, 61, 0.25) !important;
+}
+
+.exec-card-amber {
+    background: linear-gradient(135deg, #E8A317 0%, #C4890F 100%) !important;
+    box-shadow: 0 4px 12px rgba(232, 163, 23, 0.25) !important;
+}
+
+/* ---------- Empty State ---------- */
+div[data-testid="stAlert"] p {
+    font-size: 0.9rem !important;
+}
+
+/* ---------- Divider Override ---------- */
+hr {
+    border: none;
+    border-top: 1px solid #E8ECF1;
+    margin: 1.5rem 0;
+}
+
+/* ---------- Plotly Chart Containers ---------- */
+div[data-testid="stPlotlyChart"] {
+    background: #FFFFFF;
+    border: 1px solid #E8ECF1;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+/* ---------- Recommendation Numbered Items ---------- */
+div.stMarkdown ol li {
+    margin-bottom: 0.75rem;
+}
+
+/* ---------- Responsive tweaks for narrow screens ---------- */
+@media (max-width: 768px) {
+    div[data-testid="stMetric"] {
+        padding: 0.75rem;
+    }
+
+    div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+        font-size: 1.2rem !important;
+    }
+
+    .exec-card .exec-value {
+        font-size: 2rem !important;
+    }
+}

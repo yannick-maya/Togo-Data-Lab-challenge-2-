@@ -1,9 +1,9 @@
 [theme]
 primaryColor = "#0072BC"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F4F6F8"
-textColor = "#1A1A1A"
-font = "sans serif"
+backgroundColor = "#FAFBFD"
+secondaryBackgroundColor = "#F0F4F8"
+textColor = "#1A1A2E"
+font = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
 [server]
 headless = true

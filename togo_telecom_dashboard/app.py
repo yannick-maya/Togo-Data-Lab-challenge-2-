@@ -14,13 +14,17 @@ from src.data_loader import (
     get_kpis,
     get_mobile_money,
 )
+from src.style_loader import inject_styles, sidebar_brand
 from src.utils import format_int
 
 st.set_page_config(
-    page_title="Diagnostic Télécoms & Inclusion Numérique — Togo",
+    page_title="Diagnostic Telecoms & Inclusion Numerique — Togo",
     page_icon="📡",
     layout="wide",
 )
+
+inject_styles()
+sidebar_brand()
 
 st.title("📡 Diagnostic de l'accès aux télécommunications et services numériques — Togo")
 st.caption(
@@ -28,9 +32,10 @@ st.caption(
     "des zones sous-desservies, pour éclairer les priorités d'extension de la connectivité."
 )
 
-kpis = get_kpis()
+with st.spinner("Chargement des indicateurs clés…"):
+    kpis = get_kpis()
 
-st.markdown("### Chiffres-clés")
+st.markdown("#### Chiffres-clés")
 c1, c2, c3, c4, c5 = st.columns(5)
 c1.metric("Population du Togo (RGPH-5, 2022)", format_int(kpis["population_totale"]))
 c2.metric("Agences opérateurs", format_int(kpis["nb_agences"]),
@@ -49,53 +54,54 @@ st.divider()
 left, right = st.columns([2, 1])
 
 with left:
-    st.markdown("### Carte nationale des infrastructures")
+    st.markdown("#### Carte nationale des infrastructures")
     st.caption("Agences opérateurs et datacenters — vue d'ensemble (le détail par opérateur "
                "et les agents mobile money sont sur la page *Cartographie*).")
 
-    agences = get_agences()
-    dc = get_datacenters()
+    with st.spinner("Construction de la carte…"):
+        agences = get_agences()
+        dc = get_datacenters()
 
-    map_df = pd.concat(
-        [
-            agences[["lon", "lat", "operateur", "etab_nom", "prefecture_nom_bdd"]].rename(
-                columns={"operateur": "type"}
-            ),
-            dc.assign(type="Datacenter")[["lon", "lat", "type", "etab_nom", "prefecture_nom_bdd"]],
-        ],
-        ignore_index=True,
-    )
+        map_df = pd.concat(
+            [
+                agences[["lon", "lat", "operateur", "etab_nom", "prefecture_nom_bdd"]].rename(
+                    columns={"operateur": "type"}
+                ),
+                dc.assign(type="Datacenter")[["lon", "lat", "type", "etab_nom", "prefecture_nom_bdd"]],
+            ],
+            ignore_index=True,
+        )
 
-    fig = px.scatter_map(
-        map_df,
-        lat="lat",
-        lon="lon",
-        color="type",
-        color_discrete_map=COLORS,
-        hover_name="etab_nom",
-        hover_data={"prefecture_nom_bdd": True, "lat": False, "lon": False, "type": False},
-        zoom=6.2,
-        center={"lat": 8.6, "lon": 1.0},
-        height=520,
-    )
-    fig.update_layout(
-        map_style="carto-positron",
-        margin=dict(l=0, r=0, t=0, b=0),
-        legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0),
-    )
+        fig = px.scatter_map(
+            map_df,
+            lat="lat",
+            lon="lon",
+            color="type",
+            color_discrete_map=COLORS,
+            hover_name="etab_nom",
+            hover_data={"prefecture_nom_bdd": True, "lat": False, "lon": False, "type": False},
+            zoom=6.2,
+            center={"lat": 8.6, "lon": 1.0},
+            height=520,
+        )
+        fig.update_layout(
+            map_style="carto-positron",
+            margin=dict(l=0, r=0, t=0, b=0),
+            legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0),
+        )
     st.plotly_chart(fig, use_container_width=True)
 
 with right:
-    st.markdown("### Comment lire ce dashboard")
+    st.markdown("#### Comment lire ce dashboard")
     st.markdown(
         """
-1. ** Cartographie** — répartition spatiale des agences, datacenters et
+1. **Cartographie** — répartition spatiale des agences, datacenters et
    agents mobile money, avec filtres région / préfecture / opérateur.
-2. ** Mobile money vs population** — adéquation entre densité de points
+2. **Mobile money vs population** — adéquation entre densité de points
    mobile money et poids démographique, par préfecture.
-3. ** Zones blanches** — cantons sans présence d'agence opérateur,
+3. **Zones blanches** — cantons sans présence d'agence opérateur,
    classés par priorité d'intervention.
-4. ** Recommandations** — synthèse chiffrée et priorisation stratégique.
+4. **Recommandations** — synthèse chiffrée et priorisation stratégique.
         """
     )
     st.info(

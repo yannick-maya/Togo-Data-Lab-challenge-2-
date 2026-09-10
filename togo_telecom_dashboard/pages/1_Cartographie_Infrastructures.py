@@ -8,9 +8,13 @@ import plotly.express as px
 import streamlit as st
 
 from src.data_loader import COLORS, get_agences, get_datacenters, get_mobile_money_par_canton
+from src.style_loader import filter_title, inject_styles, sidebar_brand
 from src.utils import format_int
 
 st.set_page_config(page_title="Cartographie — Infrastructures", page_icon="🗺️", layout="wide")
+
+inject_styles()
+sidebar_brand()
 
 st.title("🗺️ Cartographie des infrastructures télécoms")
 st.caption(
@@ -19,12 +23,13 @@ st.caption(
     "une zone ou un opérateur."
 )
 
-agences = get_agences()
-datacenters = get_datacenters()
-mm_canton = get_mobile_money_par_canton()
+with st.spinner("Chargement des données…"):
+    agences = get_agences()
+    datacenters = get_datacenters()
+    mm_canton = get_mobile_money_par_canton()
 
 # ---------------------------------------------------------------- Filtres
-st.sidebar.header("Filtres")
+filter_title()
 
 regions = sorted(agences["region_nom_bdd"].dropna().unique())
 region_sel = st.sidebar.multiselect("Région", regions, default=regions)
@@ -60,9 +65,16 @@ c1.metric("Agences affichées", format_int(len(agences_f)))
 c2.metric("Datacenters affichés", format_int(len(dc_f)))
 c3.metric("Agents mobile money (zone filtrée)", format_int(int(mm_f["nb_agents"].sum())))
 
+# ---------------------------------------------------------------- Empty states
+has_layers = (show_agences and len(agences_f)) or (show_dc and len(dc_f)) or (show_mm and len(mm_f))
+if not region_sel:
+    st.warning("Sélectionnez au moins une région dans la barre latérale pour afficher les données.")
+elif not has_layers:
+    st.info("Aucune donnée à afficher pour les filtres sélectionnés. Essayez d'élargir votre sélection de région, préfecture ou opérateur.")
+
 # ---------------------------------------------------------------- Carte
 fig = px.scatter_map(
-    lat=[], lon=[],  # base vide, on ajoute les traces ci-dessous
+    lat=[], lon=[],
     zoom=6.2, center={"lat": 8.6, "lon": 1.0}, height=650,
 )
 
@@ -106,16 +118,33 @@ fig.update_layout(
 )
 st.plotly_chart(fig, use_container_width=True)
 
-st.markdown("### Détail des agences affichées")
-st.dataframe(
-    agences_f[
-        ["operateur", "region_nom_bdd", "prefecture_nom_bdd", "commune_nom_bdd",
-         "canton_nom_bdd", "etab_nom", "etab_adresse"]
-    ].rename(columns={
-        "operateur": "Opérateur", "region_nom_bdd": "Région", "prefecture_nom_bdd": "Préfecture",
-        "commune_nom_bdd": "Commune", "canton_nom_bdd": "Canton", "etab_nom": "Agence",
-        "etab_adresse": "Adresse",
-    }),
-    use_container_width=True,
-    height=280,
-)
+# ---------------------------------------------------------------- Tableau
+st.markdown("#### Détail des agences affichées")
+
+df_table = agences_f[
+    ["operateur", "region_nom_bdd", "prefecture_nom_bdd", "commune_nom_bdd",
+     "canton_nom_bdd", "etab_nom", "etab_adresse"]
+].rename(columns={
+    "operateur": "Opérateur", "region_nom_bdd": "Région", "prefecture_nom_bdd": "Préfecture",
+    "commune_nom_bdd": "Commune", "canton_nom_bdd": "Canton", "etab_nom": "Agence",
+    "etab_adresse": "Adresse",
+})
+
+if df_table.empty:
+    st.info("Aucune agence ne correspond aux filtres sélectionnés.")
+else:
+    st.dataframe(
+        df_table,
+        use_container_width=True,
+        height=300,
+        column_config={
+            "Opérateur": st.column_config.TextColumn(width="small"),
+            "Région": st.column_config.TextColumn(width="small"),
+            "Préfecture": st.column_config.TextColumn(width="small"),
+            "Commune": st.column_config.TextColumn(width="medium"),
+            "Canton": st.column_config.TextColumn(width="medium"),
+            "Agence": st.column_config.TextColumn(width="medium"),
+            "Adresse": st.column_config.TextColumn(width="large"),
+        },
+        hide_index=True,
+    )
