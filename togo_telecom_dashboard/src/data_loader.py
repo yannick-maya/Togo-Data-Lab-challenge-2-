@@ -58,6 +58,21 @@ def get_canal_plus() -> pd.DataFrame:
 
 
 @st.cache_data
+def get_canal_plus_external() -> pd.DataFrame:
+    """Points de vente CANAL+ réels (couche EXTERNE : API canalbox.tg + OSM).
+    Distincte de `get_canal_plus()` (fichier BDD vide) et DES AGENCES Togocom/Moov."""
+    _ensure_processed()
+    return pd.read_csv(PROCESSED / "canal_points.csv")
+
+
+@st.cache_data
+def get_cantons_hdx() -> pd.DataFrame:
+    """Cantons ADM3 HDX (centroïdes officiels + surfaces) pour la cartographie canton."""
+    _ensure_processed()
+    return pd.read_csv(PROCESSED / "cantons_hdx.csv")
+
+
+@st.cache_data
 def get_mobile_money_par_canton() -> pd.DataFrame:
     _ensure_processed()
     return pd.read_csv(PROCESSED / "mobile_money_par_canton.csv")

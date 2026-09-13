@@ -24,7 +24,8 @@ Toutes les données ci-dessous proviennent de sources publiques, documentées (U
 - **Source** : OCHA COD-AB Togo (HDX). **URL** : `https://data.humdata.org/dataset/cod-ab-tgo` — **Consulté** : 13/09/2026 — **Licence** : CC-BY-IGO.
 - **ADM2** : 40 préfectures (y compris **Agoe-Nyive, Naki-Ouest, Oti-Sud, Plaine du Mo, Lome Commune**) — remplace le contournement geoBoundaries (37 polygones, voir §5).
 - **ADM3** : 373 cantons avec centroïdes (`center_lat/center_lon`), surfaces et codes (`adm3_pcode`).
-- ⚠️ HDX ne comporte **pas** les préfectures scindées **Mô** ni **Kpendjal-Ouest** : leurs cantons restent sous `Sotouboua` / `Kpendjal` (voir §4).
+- ⚠️ HDX ne comporte **pas** les préfectures scindées **Mô** ni **Kpendjal-Ouest** : leurs cantons restent sous `Sotouboua` / `Kpendjal` (voir §4). Le polygone de **Mô** porte le nom HDX « Plaine du Mo » (mappé dans le pipeline).
+- Le geojson de l'application (`data/processed/prefectures_merged.geojson`) est désormais **construit à partir de ces polygones HDX** (40 préfectures regroupées sous les clés `polygon_key`, géométries officielles), au lieu du contournement geoBoundaries.
 
 ## 4. canton_population_join.csv (script scripts/join_rgph5_adm3.py)
 

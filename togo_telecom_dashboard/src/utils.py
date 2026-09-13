@@ -1,10 +1,20 @@
 """
 Fonctions utilitaires partagées par le pipeline de données et les pages Streamlit.
 """
+import unicodedata
 import re
 import pandas as pd
 
 WKT_POINT_RE = re.compile(r"POINT\s*\(\s*([\-0-9.]+)\s+([\-0-9.]+)\s*\)")
+
+
+def norm_name(s: str) -> str:
+    """Normalise un nom pour les jointures par appariement (accents, casse,
+    espaces, tirets, mojibake U+FFFD présents dans l'extraction PDF INSEED)."""
+    s = unicodedata.normalize("NFKD", str(s))
+    s = s.replace("\ufffd", "").replace("'", " ")
+    chars = [c for c in s if not unicodedata.combining(c)]
+    return " ".join("".join(chars).upper().split())
 
 
 def parse_point_wkt(wkt: str):
