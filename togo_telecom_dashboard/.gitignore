@@ -4,3 +4,4 @@ venv/
 .venv/
 .DS_Store
 *.zip
+scripts/_hdx_extract/
