@@ -106,17 +106,18 @@ with right:
     )
     st.info(
         "**Limites de données assumées** : le fichier *Agences CANAL+* fourni "
-        "est vide (0 ligne) et le fichier *Agences Télécom* est en réalité un "
-        "doublon exact de Togocom + Moov — il n'a donc pas été utilisé pour "
-        "éviter un double comptage. Aucune donnée officielle de couverture "
-        "réseau 2G/3G/4G n'étant disponible en open data pour le Togo, "
-        "l'analyse des zones sous-desservies repose sur un **proxy "
-        "infrastructure** (présence/absence de points de service), détaillé "
-        "sur la page *Zones blanches*.",
+        "est vide (0 ligne) — les points de vente réellement recensés (API "
+        "canalbox.tg + OpenStreetMap) sont ajoutés comme couche externe distincte — "
+        "et le fichier *Agences Télécom* est en réalité un doublon exact de "
+        "Togocom + Moov — il n'a donc pas été utilisé pour éviter un double "
+        "comptage. Aucune donnée officielle de couverture réseau 2G/3G/4G "
+        "n'étant disponible en open data pour le Togo, l'analyse des zones "
+        "sous-desservies repose sur un **proxy infrastructure** (présence/absence "
+        "de points de service), détaillé sur la page *Zones blanches*.",
         icon="ℹ️",
     )
     st.caption(
-        "Sources : jeux de données télécoms fournis pour le challenge · "
-        "Population par préfecture — INSEED Togo, RGPH-5 (novembre 2022) · "
-        "Limites administratives — geoBoundaries.org (CC BY 4.0)."
+        "Sources : jeux de données télécoms fournis pour le challenge · Population — "
+        "INSEED Togo, RGPH-5 (2022, préfectures et cantons) · Frontières administratives — "
+        "HDX OCHA COD-AB (CC-BY-IGO)."
     )

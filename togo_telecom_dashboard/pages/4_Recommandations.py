@@ -134,11 +134,13 @@ réflexion sur un point de présence régional (Kara ou Sokodé, pôles secondai
 par leur population) réduirait la dépendance à un seul point de défaillance
 géographique.
 
-**5. Combler les angles morts de mesure avant la prochaine itération** — aucune
-donnée de couverture réseau mobile officielle n'existe en open data pour le Togo,
-et les données CANAL+ fournies pour ce challenge sont vides : ces deux limites
-méritent d'être signalées aux porteurs du challenge / futurs analystes plutôt que
-masquées, car elles conditionnent la fiabilité du diagnostic "zones blanches".
+**5. Poursuivre l'enrichissement des données hors BDD et combler les angles morts
+de mesure** — la couverture réseau mobile officielle n'existe toujours pas en open
+data pour le Togo, et le fichier *Agences CANAL+* du jeu de données était vide
+(les points de vente réels ont été reconstitués depuis canalbox.tg et OpenStreetMap,
+mais cette couche reste partielle). Ces limites méritent d'être signalées aux
+porteurs du challenge / futurs analystes plutôt que masquées, car elles
+conditionnent la fiabilité du diagnostic "zones blanches".
 """)
 
 st.divider()

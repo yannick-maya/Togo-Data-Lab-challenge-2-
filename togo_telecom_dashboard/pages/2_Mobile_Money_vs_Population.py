@@ -36,10 +36,11 @@ if pref_f.empty:
 
 st.markdown("#### Carte — agents mobile money pour 10 000 habitants, par préfecture")
 st.caption(
-    "Pour cette carte, les préfectures issues d'une scission récente sont regroupées "
-    "avec leur préfecture d'origine (Agoè-Nyivé→Golfe, Kpendjal-Ouest→Kpendjal, "
-    "Oti-Sud→Oti) faute de polygone séparé disponible en open data — voir la note "
-    "méthodologique sur la page d'accueil."
+    "Préfectures issues d'une scission récente regroupées par bloc (Grand Lomé : "
+    "Golfe + Agoè-Nyivé ; Kpendjal + Kpendjal-Ouest ; Oti + Oti-Sud) pour garder "
+    "une clé stable sur toutes les pages. Les polygones proviennent des frontières "
+    "officielles HDX (OCHA COD-AB), qui fournit un tracé séparé pour les préfectures "
+    "scindées en 2021."
 )
 
 with st.spinner("Construction de la carte choroplèthe…"):
