@@ -25,13 +25,13 @@
     --mono: "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
     --sans: "IBM Plex Sans", "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 
-    /* Rail de navigation (sombre, conservé) */
-    --rail-bg:      #0B1210;
-    --rail-elevated:#16211D;
-    --rail-line:    #24332C;
-    --rail-text:    #EDEDE7;
-    --rail-text-dim:#8FA098;
-    --rail-accent:  #E8A33D;
+    /* Rail de navigation (clair, lisible — mêmes teintes que les panneaux) */
+    --rail-bg:      #F1F5F2;   /* fond du menu — panneau clair */
+    --rail-elevated:#FFFFFF;   /* page active, survol */
+    --rail-line:    #D9E1DA;   /* filets du menu */
+    --rail-text:    #1B2420;   /* texte principal du menu */
+    --rail-text-dim:#4E5D55;   /* libellés secondaires — contraste renforcé */
+    --rail-accent:  #A16100;   /* page active (cuivre texte AA) */
 }
 
 /* ---------- Typographie ---------- */
@@ -71,7 +71,7 @@ html, body, .stApp { background: var(--bg-base); }
 [data-testid="stHeader"] { background: transparent; }
 [data-testid="stToolbar"], [data-testid="stDecoration"] { display: none; }
 
-/* ---------------------------------------------------------------- Sidebar / rail sombre */
+/* ---------------------------------------------------------------- Sidebar / rail clair lisible */
 section[data-testid="stSidebar"] {
     background: var(--rail-bg);
     border-right: 1px solid var(--rail-line);
