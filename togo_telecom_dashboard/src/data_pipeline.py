@@ -34,7 +34,9 @@ import zipfile
 from typing import Optional
 
 import pandas as pd
+import numpy as np
 from rapidfuzz import fuzz, process
+from scipy.spatial import cKDTree
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from utils import add_lonlat, norm_name, polygon_key  # noqa: E402
@@ -286,6 +288,13 @@ def build_canton_indicators(agences, mobile_money, canton_population: Optional[p
         f"{int(cantons['zone_prioritaire'].sum())} classés zone prioritaire "
         f"(sans agence ET peu d'agents mobile money)"
     )
+    # Distances réelles au plus proche équipement (P1.2)
+    cantons["dist_km_agence_plus_proche"] = nearest_distance_km(
+        cantons, agences[["lon", "lat"]]
+    )
+    cantons["dist_km_agent_mm_plus_proche"] = nearest_distance_km(
+        cantons, mobile_money[["lon", "lat"]]
+    )
     if canton_population is not None:
         cantons = match_canton_population(cantons, canton_population)
         cantons = enrich_per_capita(cantons)
@@ -302,6 +311,54 @@ def enrich_per_capita(cantons: pd.DataFrame) -> pd.DataFrame:
     cantons["agences_pour_10k_hab"] = (cantons["nb_agences"] / pop * 10_000).round(2)
     cantons["agents_mm_pour_10k_hab"] = (cantons["nb_agents_mobile_money"] / pop * 10_000).round(2)
     return cantons
+
+
+def _to_xyz(lat, lon):
+    lat_r, lon_r = np.radians(lat), np.radians(lon)
+    cos_lat = np.cos(lat_r)
+    return np.column_stack([cos_lat * np.cos(lon_r), cos_lat * np.sin(lon_r), np.sin(lat_r)])
+
+
+def haversine_km(lat1, lon1, lat2, lon2) -> np.ndarray:
+    """Distance orthodromique (km) entre deux jeux de coordonnées (vecteurs)."""
+    r = 6371.0
+    lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+    dlat, dlon = lat2 - lat1, lon2 - lon1
+    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+    return 2 * r * np.arcsin(np.sqrt(a))
+
+
+def nearest_distance_km(from_df: pd.DataFrame, to_df: pd.DataFrame) -> pd.Series:
+    """Distance (km) de chaque point de `from_df` au point de `to_df` le plus proche
+    (cKDTree sur la sphère unité, puis haversine — Togo ~6-11°N, précision < 0,5 %)."""
+    if to_df.empty:
+        return pd.Series(np.nan, index=from_df.index)
+    tree = cKDTree(_to_xyz(to_df["lat"].to_numpy(), to_df["lon"].to_numpy()))
+    _, idx = tree.query(_to_xyz(from_df["lat"].to_numpy(), from_df["lon"].to_numpy()), k=1)
+    dist = haversine_km(
+        from_df["lat"].to_numpy(), from_df["lon"].to_numpy(),
+        to_df["lat"].to_numpy()[idx], to_df["lon"].to_numpy()[idx],
+    )
+    return pd.Series(dist.round(2), index=from_df.index)
+
+
+def analyse_distances(cantons: pd.DataFrame) -> dict:
+    """Synthèse P1.2 — distance moyenne (et pondérée par la population) au plus
+    proche équipement, et part de la population à plus de 10 / 20 km d'une agence."""
+    d = cantons["dist_km_agence_plus_proche"]
+    pop = pd.to_numeric(cantons["population_totale"], errors="coerce")
+    pop.fillna(0, inplace=True)
+    dist_pond = d * pop
+    tot = pop.sum()
+    return {
+        "dist_agence_moyenne_km": float(d.mean()),
+        "dist_agence_mediane_km": float(d.median()),
+        "dist_agence_max_km": float(d.max()),
+        "dist_agence_moyenne_ponderee_pop_km": float(dist_pond.sum() / tot) if tot else float("nan"),
+        "pop_plus_de_10_km": int(pop[(d > 10)].sum()),
+        "pop_plus_de_20_km": int(pop[(d > 20)].sum()),
+        "nb_cantons_plus_de_10_km": int((d > 10).sum()),
+    }
 
 
 def analyse_cantons_per_capita(cantons: pd.DataFrame) -> dict:
@@ -460,6 +517,13 @@ def main():
         for r in an["top_cantons_peuples_sans_agence"][:6]:
             log(f"    * {r['canton_nom_bdd']} ({r['prefecture_nom_bdd']}) — "
                 f"{r['population_totale']:,} hab., {r['nb_agents_mobile_money']} agents MM".replace(",", " "))
+    ad = analyse_distances(canton_indicators)
+    log("Analyse distances (P1.2) : distance agence opérateur la plus proche — "
+        f"moyenne {ad['dist_agence_moyenne_km']:.1f} km, médiane {ad['dist_agence_mediane_km']:.1f} km, "
+        f"max {ad['dist_agence_max_km']:.1f} km")
+    log(f"  - moyenne pondérée par la population : {ad['dist_agence_moyenne_ponderee_pop_km']:.1f} km")
+    log(f"  - {ad['nb_cantons_plus_de_10_km']} cantons à >10 km d'une agence "
+        f"({ad['pop_plus_de_10_km']:,} hab.) ; >20 km : {ad['pop_plus_de_20_km']:,} hab.".replace(",", " "))
     mm_par_canton = build_mobile_money_par_canton(mobile_money)
     merged_geojson = build_merged_geojson(prefecture_indicators)
 

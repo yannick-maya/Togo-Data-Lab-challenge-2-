@@ -3,6 +3,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import pandas as pd
 import plotly.express as px
 import streamlit as st
 
@@ -135,3 +136,58 @@ fig_bar = px.bar(
 )
 fig_bar.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.01))
 st.plotly_chart(fig_bar, width="stretch")
+
+st.divider()
+
+# ---------------------------------------------------------------- Distance au plus proche équipement
+st.markdown("#### Distance au plus proche équipement (agences opérateurs)")
+st.caption(
+    "Distance orthodromique entre le centroïde du canton (frontières HDX) et l'agence "
+    "Togocom / Moov la plus proche (cKDTree + haversine). Une distance importante = "
+    "point de service rarement à portée, quel que soit le nombre d'agents mobile money."
+)
+
+d_agence = cantons_f["dist_km_agence_plus_proche"]
+d_agent = cantons_f["dist_km_agent_mm_plus_proche"]
+pop = pd.to_numeric(cantons_f["population_totale"], errors="coerce").fillna(0)
+dist_pond_pop = (d_agence * pop).sum() / pop.sum() if pop.sum() else float("nan")
+
+k1, k2, k3 = st.columns(3)
+k1.metric("Distance moyenne à la plus proche agence", f"{d_agence.mean():.1f} km",
+          help=f"Max observé : {d_agence.max():.1f} km")
+k2.metric("Distance moyenne pondérée par la population", f"{dist_pond_pop:.1f} km",
+          help="Population du canton (RGPH-5, 2022) utilisée comme poids.")
+k3.metric(
+    "Cantons à plus de 15 km d'une agence",
+    f"{int((d_agence > 15).sum())} / {len(d_agence)}",
+    help=f"Soit {format_int(int(pop[d_agence > 15].sum()))} habitants environ.",
+)
+
+st.markdown("**Cantons les plus éloignés d'une agence opérateur** :")
+farthest = (
+    cantons_f.assign(distance_km=cantons_f["dist_km_agence_plus_proche"])
+    .sort_values("distance_km", ascending=False)
+    .head(15)
+)
+st.dataframe(
+    farthest[
+        ["prefecture_nom_bdd", "canton_nom_bdd", "population_totale", "distance_km",
+         "dist_km_agent_mm_plus_proche", "nb_agents_mobile_money"]
+    ].rename(columns={
+        "prefecture_nom_bdd": "Préfecture", "canton_nom_bdd": "Canton",
+        "population_totale": "Population", "distance_km": "Dist. agence (km)",
+        "dist_km_agent_mm_plus_proche": "Dist. agent MM (km)",
+        "nb_agents_mobile_money": "Nb agents MM",
+    }),
+    width="stretch",
+    height=min(420, 40 + 15 * 30),
+    column_config={
+        "Préfecture": st.column_config.TextColumn(width="medium"),
+        "Canton": st.column_config.TextColumn(width="large"),
+        "Population": st.column_config.NumberColumn(width="medium", format="%d"),
+        "Dist. agence (km)": st.column_config.NumberColumn(width="small", format="%.1f"),
+        "Dist. agent MM (km)": st.column_config.NumberColumn(width="small", format="%.1f"),
+        "Nb agents MM": st.column_config.NumberColumn(width="small", format="%d"),
+    },
+    hide_index=True,
+)
