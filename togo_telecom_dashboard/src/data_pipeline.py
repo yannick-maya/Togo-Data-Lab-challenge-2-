@@ -151,6 +151,7 @@ def match_canton_population(cantons: pd.DataFrame, pop_join: pd.DataFrame) -> pd
     cantons["adm2_name_hdx"] = None
     cantons["adm3_name_hdx"] = None
     cantons["adm3_pcode_hdx"] = None
+    cantons["area_sqkm_hdx"] = None
 
     if pop_join is None or len(pop_join) == 0:
         log("Population canton : aucune donnée INSEED — indicateurs canton inchangés")
@@ -190,6 +191,7 @@ def match_canton_population(cantons: pd.DataFrame, pop_join: pd.DataFrame) -> pd
         cantons.at[idx, "adm2_name_hdx"] = hit.get("adm2_name")
         cantons.at[idx, "adm3_name_hdx"] = hit.get("adm3_name")
         cantons.at[idx, "adm3_pcode_hdx"] = hit.get("adm3_pcode")
+        cantons.at[idx, "area_sqkm_hdx"] = hit.get("area_sqkm")
         n_exact += method == "exact"
         n_fuzzy += method == "fuzzy"
 
@@ -286,7 +288,45 @@ def build_canton_indicators(agences, mobile_money, canton_population: Optional[p
     )
     if canton_population is not None:
         cantons = match_canton_population(cantons, canton_population)
+        cantons = enrich_per_capita(cantons)
     return cantons
+
+
+def enrich_per_capita(cantons: pd.DataFrame) -> pd.DataFrame:
+    """Ajoute les indicateurs "par habitant" (population RGPH-5 canton) :
+    densité de population (surface ADM3 HDX), agences et agents mobile money
+    pour 10 000 habitants. Colonnes NaN lorsque la population est indisponible."""
+    pop = pd.to_numeric(cantons["population_totale"], errors="coerce")
+    densite = pop / pd.to_numeric(cantons["area_sqkm_hdx"], errors="coerce")
+    cantons["densite_pop_par_km2"] = densite.round(1)
+    cantons["agences_pour_10k_hab"] = (cantons["nb_agences"] / pop * 10_000).round(2)
+    cantons["agents_mm_pour_10k_hab"] = (cantons["nb_agents_mobile_money"] / pop * 10_000).round(2)
+    return cantons
+
+
+def analyse_cantons_per_capita(cantons: pd.DataFrame) -> dict:
+    """Analyse croisée population / desserte au niveau canton (P1.1) :
+    - population totale couverte par les cantons avec population connu ;
+    - population vivant dans les cantons "zone prioritaire" ;
+    - population vivant dans des cantons SANS aucun agent mobile money ;
+    - top entre-deux : cantons les plus peuplés sans aucun agent mobile money.
+    Retourne un résumé (dict) pour le log et la page Recommandations."""
+    has_pop = cantons["population_totale"].notna()
+    pop_connue = cantons.loc[has_pop, "population_totale"].sum()
+    zonas = cantons.loc[has_pop & cantons["zone_prioritaire"], "population_totale"].sum()
+    sans_agence = cantons.loc[has_pop & cantons["sans_agence_operateur"], "population_totale"].sum()
+    top_fort = (
+        cantons.loc[has_pop & cantons["sans_agence_operateur"]]
+        .sort_values("population_totale", ascending=False)
+        .head(10)[["prefecture_nom_bdd", "canton_nom_bdd", "population_totale", "nb_agents_mobile_money"]]
+        .to_dict(orient="records")
+    )
+    return {
+        "population_canton_connue": int(pop_connue),
+        "population_zone_prioritaire": int(zonas),
+        "population_sans_agence_operateur": int(sans_agence),
+        "top_cantons_peuples_sans_agence": top_fort,
+    }
 
 
 def build_mobile_money_par_canton(mobile_money: pd.DataFrame) -> pd.DataFrame:
@@ -410,6 +450,16 @@ def main():
 
     prefecture_indicators = build_prefecture_indicators(agences, mobile_money, population)
     canton_indicators = build_canton_indicators(agences, mobile_money, canton_population)
+    if "population_totale" in canton_indicators and canton_indicators["population_totale"].notna().any():
+        an = analyse_cantons_per_capita(canton_indicators)
+        log("Analyse canton per capita : population connue = "
+            f"{an['population_canton_connue']:,}".replace(",", " "))
+        log(f"  - population en zone prioritaire : {an['population_zone_prioritaire']:,}".replace(",", " "))
+        log(f"  - population sans agence opérateur : {an['population_sans_agence_operateur']:,}".replace(",", " "))
+        log("  - cantons les plus peuplés sans agence opérateur :")
+        for r in an["top_cantons_peuples_sans_agence"][:6]:
+            log(f"    * {r['canton_nom_bdd']} ({r['prefecture_nom_bdd']}) — "
+                f"{r['population_totale']:,} hab., {r['nb_agents_mobile_money']} agents MM".replace(",", " "))
     mm_par_canton = build_mobile_money_par_canton(mobile_money)
     merged_geojson = build_merged_geojson(prefecture_indicators)
 

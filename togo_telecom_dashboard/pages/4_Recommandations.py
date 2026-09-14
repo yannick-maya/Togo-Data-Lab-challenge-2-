@@ -75,6 +75,65 @@ with col3:
 
 st.divider()
 
+# ------------------------------------------------ Poids démographique de la sous-desserte
+st.markdown("#### Poids démographique de la sous-desserte (niveau canton)")
+st.caption(
+    "Population RGPH-5 (INSEED 2022) rattachée aux cantons, croisée avec la présence "
+    "d'infrastructures. Périmètre : les cantons dont la population est publiée "
+    "(hors Golfe, Agoè-Nyivé et Danyi, publiés par quartiers/communes)."
+)
+
+with st.spinner("Croisement population / desserte…"):
+    pop_connue = int(cantons["population_totale"].sum())
+    pop_sans_agence = int(cantons.loc[cantons["sans_agence_operateur"], "population_totale"].sum())
+    pop_prioritaire = int(cantons.loc[cantons["zone_prioritaire"], "population_totale"].sum())
+    nb_cantons_pop = int(cantons["population_totale"].notna().sum())
+
+c1, c2, c3 = st.columns(3)
+c1.metric(
+    "Population dans un canton sans agence opérateur",
+    format_int(pop_sans_agence),
+    help="= % de la population canton connue vivant dans un canton sans aucune "
+         "agence physique Togocom ou Moov (relais : agents mobile money uniquement).",
+)
+delta_prior = f"{pop_prioritaire/pop_connue*100:.0f} % de la pop. connue"
+c2.metric("Population en zone prioritaire", format_int(pop_prioritaire), delta=delta_prior, delta_color="off")
+c3.metric(
+    "Population canton couverte",
+    f"{format_int(pop_connue)} · {nb_cantons_pop} cantons",
+    help="Cantons pour lesquels la population RGPH-5 est publiée et rattachée.",
+)
+
+top_peuples = (
+    cantons[cantons["sans_agence_operateur"]]
+    .sort_values("population_totale", ascending=False)
+    .head(10)
+)
+st.markdown("**Cantons les plus peuplés sans agence opérateur** (le relais mobile money y est la seule présence) :")
+st.dataframe(
+    top_peuples[
+        ["prefecture_nom_bdd", "canton_nom_bdd", "population_totale", "nb_agences", "nb_agents_mobile_money",
+         "densite_pop_par_km2"]
+    ].rename(columns={
+        "prefecture_nom_bdd": "Préfecture", "canton_nom_bdd": "Canton",
+        "population_totale": "Population", "nb_agences": "Nb agences",
+        "nb_agents_mobile_money": "Nb agents MM", "densite_pop_par_km2": "Hab. / km²",
+    }),
+    width="stretch",
+    height=min(380, 40 + len(top_peuples) * 30),
+    column_config={
+        "Préfecture": st.column_config.TextColumn(width="medium"),
+        "Canton": st.column_config.TextColumn(width="large"),
+        "Population": st.column_config.NumberColumn(width="medium", format="%d"),
+        "Nb agences": st.column_config.NumberColumn(width="small", format="%d"),
+        "Nb agents MM": st.column_config.NumberColumn(width="small", format="%d"),
+        "Hab. / km²": st.column_config.NumberColumn(width="small", format="%.0f"),
+    },
+    hide_index=True,
+)
+
+st.divider()
+
 # ---------------------------------------------------------------- Top 5 scores
 st.markdown("#### Préfectures prioritaires pour l'extension de la connectivité")
 st.caption(
