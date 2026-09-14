@@ -12,15 +12,17 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parent.parent
 PROCESSED = ROOT / "data" / "processed"
 
-# Palette de couleurs cohérente utilisée sur toutes les pages
+# Palette de couleurs cohérente utilisée sur toutes les pages.
+# Les couleurs « marques » opérateurs (Togocom/Moov) sont conservées telles
+# quelles ; les couleurs fonctionnelles suivent le thème NOC (style_loader.THEME).
 COLORS = {
-    "Togocom": "#F7B500",       # jaune Togocom
-    "Moov": "#E30613",          # rouge Moov
-    "Mobile money": "#0072BC",
-    "Datacenter": "#6A2C91",
-    "CANAL+ (externe)": "#F72585",
-    "Zone prioritaire": "#D7263D",
-    "Bonne desserte": "#1B998B",
+    "Togocom": "#F7B500",       # jaune Togocom (marque)
+    "Moov": "#E30613",          # rouge Moov (marque)
+    "Mobile money": "#4FD1C5",
+    "Datacenter": "#9B7EDE",
+    "CANAL+ (externe)": "#D6709E",
+    "Zone prioritaire": "#DD5F52",
+    "Bonne desserte": "#57B98A",
 }
 
 

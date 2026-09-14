@@ -8,7 +8,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.data_loader import get_geojson, get_prefecture_indicators
-from src.style_loader import filter_title, inject_styles, sidebar_brand
+from src.style_loader import MAP_STYLE, RATE_SCALE, REGION_COLORS, THEME, filter_title, hero, inject_styles, sidebar_brand
 from src.utils import format_int, gini_coefficient, lorenz_curve
 
 st.set_page_config(page_title="Mobile money vs population", page_icon="📱", layout="wide")
@@ -51,8 +51,8 @@ with st.spinner("Construction de la carte choroplèthe…"):
         locations="polygon_key",
         featureidkey="properties.shapeName",
         color="agents_mm_pour_10k_hab",
-        color_continuous_scale="Blues",
-        map_style="carto-positron",
+        color_continuous_scale=RATE_SCALE,
+        map_style=MAP_STYLE,
         zoom=6.2,
         center={"lat": 8.6, "lon": 1.0},
         opacity=0.8,
@@ -77,6 +77,7 @@ with col1:
         y="prefecture",
         orientation="h",
         color="region",
+        color_discrete_sequence=REGION_COLORS,
         height=max(400, len(ranked) * 28),
         labels={"agents_mm_pour_10k_hab": "Agents mobile money / 10 000 hab.", "prefecture": ""},
     )
@@ -95,6 +96,7 @@ with col2:
         x="population_totale",
         y="nb_agents_mobile_money",
         color="region",
+        color_discrete_sequence=REGION_COLORS,
         size="population_totale",
         hover_name="prefecture",
         height=max(400, len(pref_f) * 32),
@@ -103,7 +105,7 @@ with col2:
     xmax = pref_f["population_totale"].max()
     fig_sc.add_shape(
         type="line", x0=0, y0=0, x1=xmax, y1=xmax * moyenne_nationale,
-        line=dict(dash="dash", color="gray"),
+        line=dict(dash="dot", color=THEME["text_secondary"]),
     )
     st.plotly_chart(fig_sc, width="stretch")
 
@@ -124,30 +126,59 @@ gini_mm = gini_coefficient(pref_f["nb_agents_mobile_money"], pref_f["population_
 p_pts_a, e_pts_a = lorenz_curve(pref_f["nb_agences"], pref_f["population_totale"])
 p_pts_m, e_pts_m = lorenz_curve(pref_f["nb_agents_mobile_money"], pref_f["population_totale"])
 
-n1, n2, n3 = st.columns(3)
-n1.metric("Gini — agences opérateurs", f"{gini_agences:.3f}",
-          help="0 = proportionnel à la population · 1 = totalement concentré")
-n2.metric("Gini — agents mobile money", f"{gini_mm:.3f}",
-          help="0 = proportionnel à la population · 1 = totalement concentré")
-n3.metric(
-    "Interprétation",
-    "Très inégal" if max(gini_agences, gini_mm) > 0.5 else "Modérément inégal",
-    delta="agences ≫ mobile money" if gini_agences > gini_mm else "mobile money ≫ agences",
-    delta_color="off",
-)
+col_gini, col_rest = st.columns([1, 2], gap="medium")
+with col_gini:
+    st.markdown(
+        hero(
+            label="Gini — agences opérateurs (vs population)",
+            value=f"{gini_agences:.3f}",
+            tone="accent",
+            note="0 = proportionnel à la population — 1 = totalement concentré",
+        ),
+        unsafe_allow_html=True,
+    )
+with col_rest:
+    n2, n3 = st.columns(2)
+    n2.metric("Gini — agents mobile money", f"{gini_mm:.3f}",
+              help="0 = proportionnel à la population — 1 = totalement concentré")
+    n3.metric(
+        "Interprétation",
+        "Très inégal" if max(gini_agences, gini_mm) > 0.5 else "Modérément inégal",
+        delta="agences ≫ mobile money" if gini_agences > gini_mm else "mobile money ≫ agences",
+        delta_color="off",
+    )
 
 if p_pts_a is not None:
     fig_lorenz = px.line(x=[0, 1], y=[0, 1], labels={"x": "Part cumulée de la population", "y": "Part cumulée de l'équipement"})
+    fig_lorenz.data[0].name = "Répartition équitable (bissectrice)"
     fig_lorenz.add_trace(
         px.line(x=np.concatenate([[0], p_pts_a.to_numpy()]), y=np.concatenate([[0], e_pts_a.to_numpy()])).data[0]
     )
-    fig_lorenz.data[0].name = "Agences opérateurs"
+    fig_lorenz.data[1].name = "Agences opérateurs"
     fig_lorenz.add_trace(
         px.line(x=np.concatenate([[0], p_pts_m.to_numpy()]), y=np.concatenate([[0], e_pts_m.to_numpy()])).data[0]
     )
-    fig_lorenz.data[1].name = "Agents mobile money"
-    fig_lorenz.data[0].line.color = "#333333"
-    fig_lorenz.data[1].line.color = "#0072BC"
+    fig_lorenz.data[2].name = "Agents mobile money"
+    fig_lorenz.update_traces(
+        line=dict(width=1.5, color=THEME["text_secondary"], dash="dot"),
+        selector=dict(name="Répartition équitable (bissectrice)"),
+    )
+    fig_lorenz.update_traces(
+        line=dict(width=3, color=THEME["accent_primary"]),
+        selector=dict(name="Agences opérateurs"),
+    )
+    fig_lorenz.update_traces(
+        line=dict(width=3, color=THEME["accent_secondary"]),
+        selector=dict(name="Agents mobile money"),
+    )
+    fig_lorenz.update_traces(
+        line=dict(width=3, color=THEME["accent_primary"]),
+        selector=dict(name="Agences opérateurs"),
+    )
+    fig_lorenz.update_traces(
+        line=dict(width=3, color=THEME["accent_secondary"]),
+        selector=dict(name="Agents mobile money"),
+    )
     fig_lorenz.update_layout(
         height=420,
         legend=dict(orientation="h", yanchor="bottom", y=1.01),

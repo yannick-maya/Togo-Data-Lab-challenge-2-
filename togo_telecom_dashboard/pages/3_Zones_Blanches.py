@@ -8,7 +8,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.data_loader import COLORS, get_canton_indicators
-from src.style_loader import filter_title, inject_styles, sidebar_brand
+from src.style_loader import DENS_SCALE, DIST_SCALE, MAP_STYLE, REGION_COLORS, THEME, filter_title, hero, inject_styles, sidebar_brand
 from src.utils import format_int
 
 st.set_page_config(page_title="Zones blanches", page_icon="📡", layout="wide")
@@ -65,14 +65,25 @@ if cantons_f.empty:
     st.warning("Aucun canton ne correspond aux filtres sélectionnés. Modifiez la sélection dans la barre latérale.")
     st.stop()
 
-c1, c2, c3 = st.columns(3)
-c1.metric("Cantons analysés", format_int(len(cantons_f)))
-c2.metric(
-    "Sans agence opérateur",
-    f"{int(cantons_f['sans_agence_operateur'].sum())} "
-    f"({cantons_f['sans_agence_operateur'].mean()*100:.0f} %)",
-)
-c3.metric("Classés zone prioritaire", format_int(int(cantons_f["zone_prioritaire"].sum())))
+col_hero, col_rest = st.columns([1, 2], gap="medium")
+with col_hero:
+    st.markdown(
+        hero(
+            label="Cantons classés zone prioritaire",
+            value=format_int(int(cantons_f["zone_prioritaire"].sum())),
+            tone="danger",
+            note="Sans agence opérateur ET agents mobile money dans le quartile inférieur",
+        ),
+        unsafe_allow_html=True,
+    )
+with col_rest:
+    c1, c2 = st.columns(2)
+    c1.metric("Cantons analysés", format_int(len(cantons_f)))
+    c2.metric(
+        "Sans agence opérateur",
+        f"{int(cantons_f['sans_agence_operateur'].sum())} "
+        f"({cantons_f['sans_agence_operateur'].mean()*100:.0f} %)",
+    )
 
 st.divider()
 
@@ -95,7 +106,7 @@ with st.spinner("Construction de la carte…"):
             color="statut",
             color_discrete_map={
                 "Zone prioritaire": COLORS["Zone prioritaire"],
-                "Sans agence (hors priorité haute)": "#F4A259",
+                "Sans agence (hors priorité haute)": THEME["warn"],
                 "Desserte correcte": COLORS["Bonne desserte"],
             },
             size="nb_agents_mobile_money",
@@ -114,7 +125,7 @@ with st.spinner("Construction de la carte…"):
             dens_f,
             lat="lat", lon="lon",
             color="densite_pop_par_km2",
-            color_continuous_scale="YlOrRd",
+            color_continuous_scale=DENS_SCALE,
             size="nb_agents_mobile_money", size_max=22,
             hover_name="canton_nom_bdd",
             hover_data=hover_cols,
@@ -131,7 +142,7 @@ with st.spinner("Construction de la carte…"):
             dist_f,
             lat="lat", lon="lon",
             color="dist_km_agence_plus_proche",
-            color_continuous_scale="Viridis", range_color=(0, 40),
+            color_continuous_scale=DIST_SCALE, range_color=(0, 40),
             size="nb_agents_mobile_money", size_max=22,
             hover_name="canton_nom_bdd",
             hover_data=hover_cols,
@@ -139,9 +150,10 @@ with st.spinner("Construction de la carte…"):
             labels={"dist_km_agence_plus_proche": "Distance agence (km)"},
         )
     fig.update_layout(
-        map_style="carto-positron",
+        map_style=MAP_STYLE,
         margin=dict(l=0, r=0, t=0, b=0),
-        legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0),
+        legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0,
+                    bgcolor="rgba(0,0,0,0)", font=dict(color=THEME["text_secondary"])),
         coloraxis_colorbar=dict(orientation="h", y=-0.15, thickness=12),
     )
 st.plotly_chart(fig, width="stretch")
@@ -189,6 +201,7 @@ by_pref = (
 )
 fig_bar = px.bar(
     by_pref, x="zone_prioritaire", y="prefecture_nom_bdd", color="region_nom_bdd",
+    color_discrete_sequence=REGION_COLORS,
     orientation="h",
     labels={"zone_prioritaire": "Nb de cantons prioritaires", "prefecture_nom_bdd": ""},
     height=max(350, len(by_pref) * 30),

@@ -8,7 +8,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.data_loader import COLORS, get_agences, get_canal_plus_external, get_datacenters, get_mobile_money_par_canton
-from src.style_loader import filter_title, inject_styles, sidebar_brand
+from src.style_loader import MAP_STYLE, THEME, filter_title, hero, inject_styles, sidebar_brand
 from src.utils import format_int
 
 st.set_page_config(page_title="Cartographie — Infrastructures", page_icon="🗺️", layout="wide")
@@ -64,10 +64,22 @@ mm_f = mm_canton[
     mm_canton["region_nom_bdd"].isin(region_sel) & mm_canton["prefecture_nom_bdd"].isin(prefecture_sel)
 ]
 
-c1, c2, c3 = st.columns(3)
-c1.metric("Agences affichées", format_int(len(agences_f)))
-c2.metric("Datacenters affichés", format_int(len(dc_f)))
-c3.metric("Agents mobile money (zone filtrée)", format_int(int(mm_f["nb_agents"].sum())))
+col_hero, col_rest = st.columns([1, 2], gap="medium")
+with col_hero:
+    st.markdown(
+        hero(
+            label="Agences affichées (zone filtrée)",
+            value=format_int(len(agences_f)),
+            unit="pts",
+            tone="accent",
+            note="Agences Togocom et Moov",
+        ),
+        unsafe_allow_html=True,
+    )
+with col_rest:
+    c2, c3 = st.columns(2)
+    c2.metric("Datacenters affichés", format_int(len(dc_f)))
+    c3.metric("Agents mobile money (zone filtrée)", format_int(int(mm_f["nb_agents"].sum())))
 
 # ---------------------------------------------------------------- Empty states
 has_layers = (show_agences and len(agences_f)) or (show_dc and len(dc_f)) or (show_mm and len(mm_f)) or (show_canal and len(canal))
@@ -102,7 +114,7 @@ if show_agences and len(agences_f):
         tr = px.scatter_map(sub, lat="lat", lon="lon", hover_name="etab_nom").data[0]
         tr.name = f"Agence {op}"
         tr.showlegend = True
-        tr.marker.color = COLORS.get(op, "#333333")
+        tr.marker.color = COLORS.get(op, THEME["text_secondary"])
         tr.marker.size = 11
         fig.add_trace(tr)
 
@@ -129,9 +141,10 @@ if show_canal and len(canal):
     fig.add_trace(tr)
 
 fig.update_layout(
-    map_style="carto-positron",
+    map_style=MAP_STYLE,
     margin=dict(l=0, r=0, t=0, b=0),
-    legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0),
+    legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0,
+                bgcolor="rgba(0,0,0,0)", font=dict(color=THEME["text_secondary"])),
 )
 st.plotly_chart(fig, width="stretch")
 

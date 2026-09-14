@@ -8,7 +8,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.data_loader import get_canton_indicators, get_prefecture_indicators
-from src.style_loader import card, inject_styles, sidebar_brand
+from src.style_loader import REGION_COLORS, card, hero, inject_styles, sidebar_brand
 from src.utils import format_int
 
 st.set_page_config(page_title="Recommandations", page_icon="💡", layout="wide")
@@ -65,7 +65,7 @@ with st.spinner("Calcul des scores de priorité…"):
 # ---------------------------------------------------------------- Executive Summary
 st.markdown("#### Résumé exécutif")
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3 = st.columns([1, 2, 1], gap="medium")
 with col1:
     st.markdown(
         card(
@@ -77,11 +77,11 @@ with col1:
     )
 with col2:
     st.markdown(
-        card(
-            title="Zones prioritaires identifiées",
+        hero(
+            label="Zones prioritaires identifiées",
             value=format_int(nb_cantons_prioritaires_total),
-            subtitle="Sans agence ET peu d'agents mobile money",
-            css_class="exec-card-red",
+            tone="danger",
+            note="Sans agence ET peu d'agents mobile money",
         ),
         unsafe_allow_html=True,
     )
@@ -123,7 +123,7 @@ delta_prior = f"{pop_prioritaire/pop_connue*100:.0f} % de la pop. connue"
 c2.metric("Population en zone prioritaire", format_int(pop_prioritaire), delta=delta_prior, delta_color="off")
 c3.metric(
     "Population canton couverte",
-    f"{format_int(pop_connue)} · {nb_cantons_pop} cantons",
+    f"{format_int(pop_connue)} — {nb_cantons_pop} cantons",
     help="Cantons pour lesquels la population RGPH-5 est publiée et rattachée.",
 )
 
@@ -174,14 +174,15 @@ for col, (_, row) in zip(cols, top5.iterrows()):
         st.metric(
             row["prefecture"],
             f"score {row['score_priorite']:.2f}",
-            help=f"Population : {format_int(row['population_totale'])} · "
-                 f"{format_int(row['nb_agences'])} agence(s) · "
+            help=f"Population : {format_int(row['population_totale'])} — "
+                 f"{format_int(row['nb_agences'])} agence(s) — "
                  f"{int(row['nb_cantons_prioritaires'])} canton(s) prioritaire(s)",
         )
 
 fig = px.bar(
     pref.sort_values("score_priorite", ascending=False).head(15),
     x="score_priorite", y="prefecture", orientation="h", color="region",
+    color_discrete_sequence=REGION_COLORS,
     labels={"score_priorite": "Score de priorité", "prefecture": ""},
     height=500,
 )

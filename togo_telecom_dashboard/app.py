@@ -14,7 +14,7 @@ from src.data_loader import (
     get_kpis,
     get_mobile_money,
 )
-from src.style_loader import inject_styles, sidebar_brand
+from src.style_loader import MAP_STYLE, hero, inject_styles, sidebar_brand
 from src.utils import format_int
 
 st.set_page_config(
@@ -35,19 +35,33 @@ st.caption(
 with st.spinner("Chargement des indicateurs clés…"):
     kpis = get_kpis()
 
-st.markdown("#### Chiffres-clés")
-c1, c2, c3, c4, c5 = st.columns(5)
-c1.metric("Population du Togo (RGPH-5, 2022)", format_int(kpis["population_totale"]))
-c2.metric("Agences opérateurs", format_int(kpis["nb_agences"]),
-          help=f"Togocom : {kpis['nb_agences_togocom']} · Moov : {kpis['nb_agences_moov']}")
-c3.metric("Agents mobile money", format_int(kpis["nb_agents_mm"]))
-c4.metric("Datacenters recensés", format_int(kpis["nb_datacenters"]))
-c5.metric(
-    "Cantons sans agence opérateur",
-    f"{kpis['nb_cantons_sans_agence']} / {kpis['nb_cantons']}",
-    help="Cantons ne disposant d'aucune agence physique Togocom ou Moov — "
-         "ils reposent uniquement sur des agents mobile money indépendants.",
-)
+with st.spinner("Chargement des indicateurs clés…"):
+    kpis = get_kpis()
+
+col_hero, col_rest = st.columns([1, 3], gap="medium")
+with col_hero:
+    st.markdown(
+        hero(
+            label="Population nationale RGPH-5",
+            value=format_int(kpis["population_totale"]),
+            unit="hab.",
+            tone="accent",
+            note="Recensement INSEED, novembre 2022",
+        ),
+        unsafe_allow_html=True,
+    )
+with col_rest:
+    c2, c3, c4, c5 = st.columns(4)
+    c2.metric("Agences opérateurs", format_int(kpis["nb_agences"]),
+              help=f"Togocom : {kpis['nb_agences_togocom']} — Moov : {kpis['nb_agences_moov']}")
+    c3.metric("Agents mobile money", format_int(kpis["nb_agents_mm"]))
+    c4.metric("Datacenters recensés", format_int(kpis["nb_datacenters"]))
+    c5.metric(
+        "Cantons sans agence opérateur",
+        f"{kpis['nb_cantons_sans_agence']} / {kpis['nb_cantons']}",
+        help="Cantons ne disposant d'aucune agence physique Togocom ou Moov — "
+             "ils reposent uniquement sur des agents mobile money indépendants.",
+    )
 
 st.divider()
 
@@ -85,9 +99,10 @@ with left:
             height=520,
         )
         fig.update_layout(
-            map_style="carto-positron",
+            map_style=MAP_STYLE,
             margin=dict(l=0, r=0, t=0, b=0),
-            legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0),
+            legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0,
+                        bgcolor="rgba(0,0,0,0)", font=dict(color="#8FA098")),
         )
     st.plotly_chart(fig, width="stretch")
 
@@ -117,7 +132,7 @@ with right:
         icon="ℹ️",
     )
     st.caption(
-        "Sources : jeux de données télécoms fournis pour le challenge · Population — "
-        "INSEED Togo, RGPH-5 (2022, préfectures et cantons) · Frontières administratives — "
+        "Sources : jeux de données télécoms fournis pour le challenge — Population : "
+        "INSEED Togo, RGPH-5 (2022, préfectures et cantons) — Frontières administratives : "
         "HDX OCHA COD-AB (CC-BY-IGO)."
     )
