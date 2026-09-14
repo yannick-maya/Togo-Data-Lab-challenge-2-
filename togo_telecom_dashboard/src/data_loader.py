@@ -18,6 +18,7 @@ COLORS = {
     "Moov": "#E30613",          # rouge Moov
     "Mobile money": "#0072BC",
     "Datacenter": "#6A2C91",
+    "CANAL+ (externe)": "#F72585",
     "Zone prioritaire": "#D7263D",
     "Bonne desserte": "#1B998B",
 }

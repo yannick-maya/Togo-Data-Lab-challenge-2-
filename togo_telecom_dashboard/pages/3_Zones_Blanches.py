@@ -36,10 +36,33 @@ with st.spinner("Chargement des indicateurs canton…"):
 regions = sorted(cantons["region_nom_bdd"].unique())
 filter_title()
 region_sel = st.sidebar.multiselect("Région", regions, default=regions)
+
+prefectures_dispo = sorted(
+    cantons.loc[cantons["region_nom_bdd"].isin(region_sel), "prefecture_nom_bdd"].dropna().unique()
+)
+prefecture_sel = st.sidebar.multiselect("Préfecture", prefectures_dispo, default=prefectures_dispo)
+
+statuts_dispo = ["Zone prioritaire", "Sans agence (hors priorité haute)", "Desserte correcte"]
+statut_sel = st.sidebar.multiselect("Statut de desserte", statuts_dispo, default=statuts_dispo)
+
+color_by = st.sidebar.radio(
+    "Coloration des cantons",
+    ["Statut de desserte", "Densité de population (hab./km²)", "Distance à la plus proche agence"],
+    help="Densité et distance ne sont disponibles que pour les cantons avec population / distance calculée.",
+)
+
 cantons_f = cantons[cantons["region_nom_bdd"].isin(region_sel)].copy()
+cantons_f = cantons_f[cantons_f["prefecture_nom_bdd"].isin(prefecture_sel)]
+cantons_f["statut"] = cantons_f["zone_prioritaire"].map(
+    {True: "Zone prioritaire", False: "Desserte correcte"}
+)
+cantons_f.loc[
+    (~cantons_f["zone_prioritaire"]) & (cantons_f["sans_agence_operateur"]), "statut"
+] = "Sans agence (hors priorité haute)"
+cantons_f = cantons_f[cantons_f["statut"].isin(statut_sel)]
 
 if cantons_f.empty:
-    st.warning("Aucun canton ne correspond à la région sélectionnée. Modifiez le filtre dans la barre latérale.")
+    st.warning("Aucun canton ne correspond aux filtres sélectionnés. Modifiez la sélection dans la barre latérale.")
     st.stop()
 
 c1, c2, c3 = st.columns(3)
@@ -54,36 +77,72 @@ c3.metric("Classés zone prioritaire", format_int(int(cantons_f["zone_prioritair
 st.divider()
 
 st.markdown("#### Carte des cantons par niveau de desserte")
-cantons_f["statut"] = cantons_f["zone_prioritaire"].map(
-    {True: "Zone prioritaire", False: "Desserte correcte"}
-)
-cantons_f.loc[
-    (~cantons_f["zone_prioritaire"]) & (cantons_f["sans_agence_operateur"]), "statut"
-] = "Sans agence (hors priorité haute)"
 
 with st.spinner("Construction de la carte…"):
-    fig = px.scatter_map(
-        cantons_f,
-        lat="lat", lon="lon",
-        color="statut",
-        color_discrete_map={
-            "Zone prioritaire": COLORS["Zone prioritaire"],
-            "Sans agence (hors priorité haute)": "#F4A259",
-            "Desserte correcte": COLORS["Bonne desserte"],
-        },
-        size="nb_agents_mobile_money",
-        size_max=22,
-        hover_name="canton_nom_bdd",
-        hover_data={
-            "prefecture_nom_bdd": True, "nb_agences": True, "nb_agents_mobile_money": True,
-            "lat": False, "lon": False, "statut": False,
-        },
-        zoom=6.2, center={"lat": 8.6, "lon": 1.0}, height=600,
-    )
+    hover_cols = {
+        "prefecture_nom_bdd": True, "nb_agences": True, "nb_agents_mobile_money": True,
+        "lat": False, "lon": False, "statut": False,
+    }
+    if "population_totale" in cantons_f:
+        hover_cols["population_totale"] = True
+    if "dist_km_agence_plus_proche" in cantons_f:
+        hover_cols["dist_km_agence_plus_proche"] = True
+
+    if color_by == "Statut de desserte":
+        fig = px.scatter_map(
+            cantons_f,
+            lat="lat", lon="lon",
+            color="statut",
+            color_discrete_map={
+                "Zone prioritaire": COLORS["Zone prioritaire"],
+                "Sans agence (hors priorité haute)": "#F4A259",
+                "Desserte correcte": COLORS["Bonne desserte"],
+            },
+            size="nb_agents_mobile_money",
+            size_max=22,
+            hover_name="canton_nom_bdd",
+            hover_data=hover_cols,
+            zoom=6.2, center={"lat": 8.6, "lon": 1.0}, height=600,
+        )
+    elif color_by == "Densité de population (hab./km²)":
+        dens_f = cantons_f[
+            ["lon", "lat", "canton_nom_bdd", "prefecture_nom_bdd", "nb_agences",
+             "nb_agents_mobile_money", "densite_pop_par_km2", "population_totale",
+             "dist_km_agence_plus_proche", "statut"]
+        ].dropna(subset=["densite_pop_par_km2"])
+        fig = px.scatter_map(
+            dens_f,
+            lat="lat", lon="lon",
+            color="densite_pop_par_km2",
+            color_continuous_scale="YlOrRd",
+            size="nb_agents_mobile_money", size_max=22,
+            hover_name="canton_nom_bdd",
+            hover_data=hover_cols,
+            zoom=6.2, center={"lat": 8.6, "lon": 1.0}, height=600,
+            labels={"densite_pop_par_km2": "Habitants / km²"},
+        )
+    else:
+        dist_f = cantons_f[
+            ["lon", "lat", "canton_nom_bdd", "prefecture_nom_bdd", "nb_agences",
+             "nb_agents_mobile_money", "dist_km_agence_plus_proche", "population_totale",
+             "statut"]
+        ].dropna(subset=["dist_km_agence_plus_proche"])
+        fig = px.scatter_map(
+            dist_f,
+            lat="lat", lon="lon",
+            color="dist_km_agence_plus_proche",
+            color_continuous_scale="Viridis", range_color=(0, 40),
+            size="nb_agents_mobile_money", size_max=22,
+            hover_name="canton_nom_bdd",
+            hover_data=hover_cols,
+            zoom=6.2, center={"lat": 8.6, "lon": 1.0}, height=600,
+            labels={"dist_km_agence_plus_proche": "Distance agence (km)"},
+        )
     fig.update_layout(
         map_style="carto-positron",
         margin=dict(l=0, r=0, t=0, b=0),
         legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0),
+        coloraxis_colorbar=dict(orientation="h", y=-0.15, thickness=12),
     )
 st.plotly_chart(fig, width="stretch")
 

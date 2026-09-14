@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from src.data_loader import COLORS, get_agences, get_datacenters, get_mobile_money_par_canton
+from src.data_loader import COLORS, get_agences, get_canal_plus_external, get_datacenters, get_mobile_money_par_canton
 from src.style_loader import filter_title, inject_styles, sidebar_brand
 from src.utils import format_int
 
@@ -27,6 +27,7 @@ with st.spinner("Chargement des données…"):
     agences = get_agences()
     datacenters = get_datacenters()
     mm_canton = get_mobile_money_par_canton()
+    canal = get_canal_plus_external()
 
 # ---------------------------------------------------------------- Filtres
 filter_title()
@@ -46,6 +47,9 @@ st.sidebar.markdown("---")
 show_agences = st.sidebar.checkbox("Afficher les agences opérateurs", value=True)
 show_dc = st.sidebar.checkbox("Afficher les datacenters", value=True)
 show_mm = st.sidebar.checkbox("Afficher les agents mobile money (par canton)", value=True)
+show_canal = st.sidebar.checkbox("Afficher les points CANAL+ (couche externe)", value=False,
+                                 help="Points de vente CANAL+ réellement recensés : API canalbox.tg + OpenStreetMap "
+                                      "(hors jeu de données BDD).")
 
 # ---------------------------------------------------------------- Application des filtres
 agences_f = agences[
@@ -66,7 +70,7 @@ c2.metric("Datacenters affichés", format_int(len(dc_f)))
 c3.metric("Agents mobile money (zone filtrée)", format_int(int(mm_f["nb_agents"].sum())))
 
 # ---------------------------------------------------------------- Empty states
-has_layers = (show_agences and len(agences_f)) or (show_dc and len(dc_f)) or (show_mm and len(mm_f))
+has_layers = (show_agences and len(agences_f)) or (show_dc and len(dc_f)) or (show_mm and len(mm_f)) or (show_canal and len(canal))
 if not region_sel:
     st.warning("Sélectionnez au moins une région dans la barre latérale pour afficher les données.")
 elif not has_layers:
@@ -109,6 +113,19 @@ if show_dc and len(dc_f):
     tr.marker.color = COLORS["Datacenter"]
     tr.marker.size = 16
     tr.marker.symbol = "circle"
+    fig.add_trace(tr)
+
+if show_canal and len(canal):
+    tr = px.scatter_map(
+        canal, lat="lat", lon="lon",
+        hover_name="name",
+        hover_data={"commune": True, "type": True, "source": True, "lat": False, "lon": False},
+    ).data[0]
+    tr.name = "CANAL+ (externe)"
+    tr.showlegend = True
+    tr.marker.color = COLORS["CANAL+ (externe)"]
+    tr.marker.size = 9
+    tr.marker.symbol = "square"
     fig.add_trace(tr)
 
 fig.update_layout(
