@@ -16,6 +16,15 @@ st.set_page_config(page_title="Recommandations", page_icon="💡", layout="wide"
 inject_styles()
 sidebar_brand()
 
+# ---------------------------------------------------------------- Score paramétrable (P1.4)
+st.sidebar.subheader("Score de priorité — poids")
+st.sidebar.caption("0 = ignore ce critère. Ajustez pour explorer différents scénarios.")
+w_pop = st.sidebar.slider("Poids démographique", 0.0, 3.0, 1.0, 0.5)
+w_agences = st.sidebar.slider("Faible densité d'agences", 0.0, 3.0, 1.0, 0.5)
+w_mm = st.sidebar.slider("Faible densité d'agents mobile money", 0.0, 3.0, 1.0, 0.5)
+w_dist = st.sidebar.slider("Éloignement des agences (dist. moyenne)", 0.0, 3.0, 1.0, 0.5)
+w_cantons = st.sidebar.slider("Cantons prioritaires déjà identifiés", 0.0, 3.0, 1.0, 0.5)
+
 st.title("💡 Synthèse et recommandations stratégiques")
 
 with st.spinner("Calcul des scores de priorité…"):
@@ -28,11 +37,25 @@ with st.spinner("Calcul des scores de priorité…"):
     pref = pref.merge(cantons_prioritaires_par_pref, left_on="prefecture", right_index=True, how="left")
     pref["nb_cantons_prioritaires"] = pref["nb_cantons_prioritaires"].fillna(0)
 
+    # distance moyenne canton -> agence la plus proche, agrégée par préfecture
+    dist_par_pref = (
+        cantons.groupby("prefecture_nom_bdd")["dist_km_agence_plus_proche"]
+        .mean()
+        .rename("dist_km_agence_moyenne")
+    )
+    pref = pref.merge(dist_par_pref, left_on="prefecture", right_index=True, how="left")
+
+    def norm01(s):
+        lo, hi = s.min(), s.max()
+        return (s - lo) / (hi - lo) if hi > lo else s * 0
+
     pref["score_priorite"] = (
-        (pref["population_totale"] / pref["population_totale"].max())
-        * (1 - pref["agences_pour_10k_hab"] / pref["agences_pour_10k_hab"].max())
-        * (1 + pref["nb_cantons_prioritaires"])
-    ).round(2)
+        w_pop * norm01(pref["population_totale"])
+        + w_agences * (1 - norm01(pref["agences_pour_10k_hab"]))
+        + w_mm * (1 - norm01(pref["agents_mm_pour_10k_hab"]))
+        + w_dist * norm01(pref["dist_km_agence_moyenne"].fillna(0))
+        + w_cantons * norm01(pref["nb_cantons_prioritaires"])
+    ).round(3)
 
     top5 = pref.sort_values("score_priorite", ascending=False).head(5)
     nb_cantons_prioritaires_total = int(cantons["zone_prioritaire"].sum())
@@ -137,9 +160,12 @@ st.divider()
 # ---------------------------------------------------------------- Top 5 scores
 st.markdown("#### Préfectures prioritaires pour l'extension de la connectivité")
 st.caption(
-    "Score combinant poids démographique, faible densité d'agences opérateurs "
-    "et nombre de cantons déjà identifiés comme sous-desservis. Un score élevé "
-    "signale un fort impact potentiel si des points de service y sont ajoutés."
+    "Score paramétrable (barre latérale) combinant poids démographique, faible "
+    "densité d'agences opérateurs et d'agents mobile money, éloignement moyen de "
+    "l'agence la plus proche et nombre de cantons déjà identifiés comme "
+    "sous-desservis (chaque composante normalisée 0-1, pondérée par son curseur). "
+    "Un score élevé signale un fort impact potentiel si des points de service y "
+    "sont ajoutés."
 )
 
 cols = st.columns(5)
