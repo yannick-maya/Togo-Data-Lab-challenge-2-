@@ -8,7 +8,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.data_loader import get_geojson, get_prefecture_indicators
-from src.style_loader import MAP_STYLE, RATE_SCALE, REGION_COLORS, THEME, filter_title, hero, inject_styles, sidebar_brand
+from src.style_loader import MAP_STYLE, RATE_SCALE, REGION_COLORS, THEME, filter_title, hero, inject_styles, sidebar_brand, style_figure
 from src.utils import format_int, gini_coefficient, lorenz_curve
 
 st.set_page_config(page_title="Mobile money vs population", page_icon="📱", layout="wide")
@@ -62,6 +62,7 @@ with st.spinner("Construction de la carte choroplèthe…"):
         labels={"agents_mm_pour_10k_hab": "Agents / 10k hab."},
     )
     fig_map.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+    style_figure(fig_map)
 st.plotly_chart(fig_map, width="stretch")
 
 st.divider()
@@ -82,6 +83,7 @@ with col1:
         labels={"agents_mm_pour_10k_hab": "Agents mobile money / 10 000 hab.", "prefecture": ""},
     )
     fig_bar.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.01))
+    style_figure(fig_bar)
     st.plotly_chart(fig_bar, width="stretch")
 
 with col2:
@@ -107,6 +109,7 @@ with col2:
         type="line", x0=0, y0=0, x1=xmax, y1=xmax * moyenne_nationale,
         line=dict(dash="dot", color=THEME["text_secondary"]),
     )
+    style_figure(fig_sc)
     st.plotly_chart(fig_sc, width="stretch")
 
 st.divider()
@@ -185,6 +188,7 @@ if p_pts_a is not None:
         xaxis=dict(range=[0, 1.02]), yaxis=dict(range=[0, 1.02]),
         showlegend=True,
     )
+    style_figure(fig_lorenz)
     st.plotly_chart(fig_lorenz, width="stretch")
 else:
     st.info("Pas assez de données pour tracer la courbe de Lorenz sur la zone filtrée.")

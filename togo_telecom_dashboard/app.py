@@ -14,7 +14,7 @@ from src.data_loader import (
     get_kpis,
     get_mobile_money,
 )
-from src.style_loader import MAP_STYLE, hero, inject_styles, sidebar_brand
+from src.style_loader import MAP_STYLE, THEME, hero, inject_styles, sidebar_brand, style_figure
 from src.utils import format_int
 
 st.set_page_config(
@@ -102,8 +102,9 @@ with left:
             map_style=MAP_STYLE,
             margin=dict(l=0, r=0, t=0, b=0),
             legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0,
-                        bgcolor="rgba(0,0,0,0)", font=dict(color="#8FA098")),
+                        bgcolor="rgba(0,0,0,0)", font=dict(color=THEME["text_secondary"])),
         )
+        style_figure(fig)
     st.plotly_chart(fig, width="stretch")
 
 with right:

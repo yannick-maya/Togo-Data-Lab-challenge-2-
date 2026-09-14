@@ -8,7 +8,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.data_loader import COLORS, get_agences, get_canal_plus_external, get_datacenters, get_mobile_money_par_canton
-from src.style_loader import MAP_STYLE, THEME, filter_title, hero, inject_styles, sidebar_brand
+from src.style_loader import MAP_STYLE, THEME, filter_title, hero, inject_styles, sidebar_brand, style_figure
 from src.utils import format_int
 
 st.set_page_config(page_title="Cartographie — Infrastructures", page_icon="🗺️", layout="wide")
@@ -146,6 +146,7 @@ fig.update_layout(
     legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0,
                 bgcolor="rgba(0,0,0,0)", font=dict(color=THEME["text_secondary"])),
 )
+style_figure(fig)
 st.plotly_chart(fig, width="stretch")
 
 # ---------------------------------------------------------------- Tableau

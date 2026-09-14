@@ -8,7 +8,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.data_loader import get_canton_indicators, get_prefecture_indicators
-from src.style_loader import REGION_COLORS, card, hero, inject_styles, sidebar_brand
+from src.style_loader import REGION_COLORS, card, hero, inject_styles, sidebar_brand, style_figure
 from src.utils import format_int
 
 st.set_page_config(page_title="Recommandations", page_icon="💡", layout="wide")
@@ -187,6 +187,7 @@ fig = px.bar(
     height=500,
 )
 fig.update_layout(yaxis=dict(autorange="reversed"), legend=dict(orientation="h", yanchor="bottom", y=1.01))
+style_figure(fig)
 st.plotly_chart(fig, width="stretch")
 
 st.divider()

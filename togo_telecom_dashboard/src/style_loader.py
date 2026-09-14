@@ -44,6 +44,33 @@ DENS_SCALE = ["#E3EAE2", "#B7C4B4", "#D9A86A", "#B26B10"]
 DIST_SCALE = ["#E3EAE2", "#C19B5E", "#C07A1D", "#8A5A00"]
 DASH_COLOR = THEME["text_secondary"]
 
+# Police Plotly alignée sur la feuille de style.
+_FONT_STACK = "IBM Plex Sans, Inter, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif"
+
+
+def style_figure(fig):
+    """Force un rendu Plotly clair et lisible, quel que soit le thème Streamlit.
+
+    Appliquer après les update_layout() des figures (cartes comprises) pour
+    garantir un fond blanc, un texte sombre et des quadrillages visibles.
+    """
+    fig.update_layout(
+        template="plotly_white",
+        paper_bgcolor="#FFFFFF",
+        plot_bgcolor="#FFFFFF",
+        font=dict(family=_FONT_STACK, color=THEME["text_primary"], size=12),
+    )
+    fig.update_xaxes(
+        gridcolor="#E7EDE9", zerolinecolor=THEME["line"], linecolor=THEME["line"],
+        title_font=dict(color=THEME["text_secondary"]),
+    )
+    fig.update_yaxes(
+        gridcolor="#E7EDE9", zerolinecolor=THEME["line"], linecolor=THEME["line"],
+        title_font=dict(color=THEME["text_secondary"]),
+    )
+    fig.update_annotations(font=dict(color=THEME["text_primary"]))
+    return fig
+
 
 def inject_styles():
     """Inject the dashboard CSS once per session (idempotent)."""

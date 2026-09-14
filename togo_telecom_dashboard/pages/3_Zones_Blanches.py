@@ -8,7 +8,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.data_loader import COLORS, get_canton_indicators
-from src.style_loader import DENS_SCALE, DIST_SCALE, MAP_STYLE, REGION_COLORS, THEME, filter_title, hero, inject_styles, sidebar_brand
+from src.style_loader import DENS_SCALE, DIST_SCALE, MAP_STYLE, REGION_COLORS, THEME, filter_title, hero, inject_styles, sidebar_brand, style_figure
 from src.utils import format_int
 
 st.set_page_config(page_title="Zones blanches", page_icon="📡", layout="wide")
@@ -156,6 +156,7 @@ with st.spinner("Construction de la carte…"):
                     bgcolor="rgba(0,0,0,0)", font=dict(color=THEME["text_secondary"])),
         coloraxis_colorbar=dict(orientation="h", y=-0.15, thickness=12),
     )
+    style_figure(fig)
 st.plotly_chart(fig, width="stretch")
 
 st.divider()
@@ -207,6 +208,7 @@ fig_bar = px.bar(
     height=max(350, len(by_pref) * 30),
 )
 fig_bar.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.01))
+style_figure(fig_bar)
 st.plotly_chart(fig_bar, width="stretch")
 
 st.divider()
