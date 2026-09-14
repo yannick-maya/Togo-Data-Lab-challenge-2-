@@ -24,6 +24,18 @@ streamlit run app.py
 
 L'application s'ouvre sur `http://localhost:8501`.
 
+### Lancement avec Docker
+
+```bash
+docker compose up --build
+```
+
+L'application s'ouvre sur `http://localhost:8501`. L'image embarque les données
+préparées (`data/processed/`) : aucune étape de génération n'est nécessaire au
+démarrage en conteneur. Pour régénérer les données préparées (nouveaux fichiers
+dans `data/raw/` ou `data/external/`), lancer en local
+`python src/data_pipeline.py` avant de reconstruire l'image.
+
 ## Structure du projet
 
 ```
@@ -40,11 +52,12 @@ togo_telecom_dashboard/
 │   └── utils.py                        # Fonctions utilitaires (parsing WKT, mapping préfectures)
 ├── data/
 │   ├── raw/                            # Fichiers bruts fournis pour le challenge (inchangés)
-│   ├── external/                       # Données externes sourcées (population, limites admin.)
+│   ├── external/                       # Données externes sourcées (population, limites admin., CANAL+)
 │   │   └── README_donnees_externes.md  # Détail des sources et de leurs limites
 │   └── processed/                      # Généré par data_pipeline.py — consommé par le dashboard
 ├── .streamlit/config.toml              # Thème visuel
 ├── requirements.txt
+├── Dockerfile / docker-compose.yml     # Lancement conteneurisé
 └── README.md                           # Ce fichier
 ```
 
@@ -55,36 +68,52 @@ togo_telecom_dashboard/
   lignes). Il est écarté du pipeline pour éviter un double comptage ; le
   dashboard travaille sur l'union Togocom + Moov.
 - **CANAL+** : le fichier fourni est vide (0 ligne). Il est chargé et
-  signalé comme tel dans l'application plutôt qu'ignoré silencieusement.
-- **Population** : donnée officielle par préfecture, RGPH-5 (INSEED Togo,
-  recensement de novembre 2022). Non disponible au niveau canton dans le
-  temps imparti au challenge — les ratios "par habitant" sont donc calculés
-  au niveau préfecture uniquement.
-- **Limites administratives** : geoBoundaries.org (CC BY 4.0), niveau
-  préfecture (37 polygones). Le Togo comptant aujourd'hui 39 préfectures,
-  3 préfectures issues de scissions récentes (Agoè-Nyivé, Kpendjal-Ouest,
-  Oti-Sud) sont regroupées avec leur préfecture d'origine pour la
-  cartographie — voir le détail dans `data/external/README_donnees_externes.md`.
+  signalé comme tel dans l'application ; en complément, une couche de
+  points de vente CANAL+ **externes** (API canalbox.tg + OpenStreetMap,
+  ≈ 21 points) est proposée sur la carte (désactivée par défaut).
+- **Population** : données officielles RGPH-5 (INSEED Togo, recensement de
+  novembre 2022). Les effectifs **par préfecture** (approche directe) sont
+  complétés par une désagrégation **par canton** (≈ 339 des 373 cantons,
+  soit 5,61 millions d'habitants ; 34 cantons sans effectif publié) issue du
+  Livret « Distribution spatiale de la population » et des découpes
+  cantonales HDX (nom exact ou rapprochement flou). Les ratios « par
+  habitant » sont cadrés et signalés quand le dénominateur est partiel.
+- **Limites administratives cantonales** : HDX TGO adm3 (37 préfectures
+  multi-polygones), complétées par la table des cantons HDX (373 cantons).
+  Les 39 préfectures actuelles sont ramenées à leurs polygones HDX via un
+  mapping explicite (ex. « Plaine du Mo » = préfecture « Mô ») — voir le
+  détail dans `data/external/README_donnees_externes.md`.
+- **Distances réelles à l'équipement** : distance orthodromique (haversine)
+  de chaque canton à l'agence opérateur la plus proche, calculée par
+  recherche k-d sur sphère (moyenne 17,4 km ; 258 cantons à plus de 10 km,
+  ≈ 3,4 M d'habitants).
+- **Inégalités de répartition** : courbes de Lorenz et coefficients de Gini
+  agences opérateurs (0,38) et agents mobile money (0,31) vs population.
+- **Score de priorisation paramétrable** : combinaison pondérée (barre
+  latérale) de la démographie, de la sous-desserte physique, de
+  l'éloignement moyen et des cantons déjà identifiés — chaque composante
+  normalisée en 0-1.
 - **Zones blanches** : aucune donnée officielle de couverture réseau
   2G/3G/4G n'est disponible en open data pour le Togo. Le dashboard utilise
   donc un **proxy infrastructure** (absence d'agence physique + faible
-  densité d'agents mobile money) plutôt qu'une mesure de couverture radio
-  réelle. Ce choix est assumé et explicitement affiché dans l'application.
+  densité d'agents mobile money + éloignement) plutôt qu'une mesure de
+  couverture radio réelle. Ce choix est assumé et explicitement affiché
+  dans l'application.
 
 ## Correspondance avec les critères d'évaluation du challenge
 
 | Critère | Comment il est adressé |
 |---|---|
 | **C1 — Ergonomie, clarté visuelle, navigation** | Structure multipage claire (Accueil → Cartographie → Mobile money → Zones blanches → Recommandations), KPIs en en-tête, thème visuel cohérent, notes méthodologiques visibles sans encombrer les graphiques. |
-| **C2 — Pertinence des analyses, compréhension des données, qualité des conclusions** | Détection et traitement explicite des anomalies du jeu de données (doublon Télécom, CANAL+ vide), croisement infrastructure × population × territoire, score de priorisation transparent et reproductible en page *Recommandations*. |
-| **C3 — Richesse des interactions, filtres, fluidité** | Filtres région / préfecture / opérateur / couches sur la carte, cartes interactives (zoom, survol), tableaux triables, sélection dynamique du nombre de résultats affichés. |
+| **C2 — Pertinence des analyses, compréhension des données, qualité des conclusions** | Détection et traitement explicite des anomalies du jeu de données (doublon Télécom, CANAL+ vide → couche externe issue de canalbox.tg + OSM), désagrégation de la population RGPH-5 au niveau canton (exact + flou documenté), distances orthodromiques à l'équipement le plus proche, inégalités de répartition (Lorenz/Gini), score de priorisation transparent, pondéré et reproductible en page *Recommandations*. |
+| **C3 — Richesse des interactions, filtres, fluidité** | Filtres région / préfecture / opérateur / statut de desserte / couches (dont CANAL+ externe) sur la carte, coloration des cantons au choix (statut, densité, distance), cartes interactives (zoom, survol), tableaux triables, curseurs de pondération du score de priorité, sélection dynamique du nombre de résultats affichés. |
 | **C4 — Structure, clarté, méthodologie du rapport** | Les choix méthodologiques et leurs limites sont documentés à trois niveaux : ce README, `data/external/README_donnees_externes.md`, et directement dans l'interface (encadrés d'avertissement contextuels). À reprendre dans le rapport PowerPoint associé. |
 
 ## Notes pour aller plus loin (hors délai du challenge)
 
-- Compléter la population au niveau canton (les données existent dans le
-  Livret RGPH-5 "Distribution spatiale de la population" de l'INSEED, mais
-  n'ont pas été transcrites intégralement faute de temps).
+- Un fichier de population cantonale téléchargeable serait la façon la plus
+  simple de consolider les 34 cantons sans effectif publié (repris au
+  niveau préfecture dans le dashboard).
 - Remplacer le proxy "zones blanches" par une vraie donnée de couverture
   réseau si l'ARCEP Togo venait à la publier, ou en s'appuyant sur
   OpenCelliD (inscription gratuite requise, couverture communautaire à

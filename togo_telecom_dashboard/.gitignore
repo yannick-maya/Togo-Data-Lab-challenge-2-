@@ -4,4 +4,8 @@ venv/
 .venv/
 .DS_Store
 *.zip
+*.log
+.pytest_cache/
+.streamlit/secrets.toml
 scripts/_hdx_extract/
+reports/*.pptx
