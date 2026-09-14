@@ -3,12 +3,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import numpy as np
 import plotly.express as px
 import streamlit as st
 
 from src.data_loader import get_geojson, get_prefecture_indicators
 from src.style_loader import filter_title, inject_styles, sidebar_brand
-from src.utils import format_int
+from src.utils import format_int, gini_coefficient, lorenz_curve
 
 st.set_page_config(page_title="Mobile money vs population", page_icon="📱", layout="wide")
 
@@ -105,6 +106,57 @@ with col2:
         line=dict(dash="dash", color="gray"),
     )
     st.plotly_chart(fig_sc, width="stretch")
+
+st.divider()
+
+# ---------------------------------------------------------------- Lorenz / Gini
+st.markdown("#### Inégalités de répartition : courbes de Lorenz et Gini")
+st.caption(
+    "Préfectures triées par ratio équipement / population croissant. Une courbe loin "
+    "de la bissectrice = répartition très inégale : une grande part de la population "
+    "vit dans des préfectures relativement peu dotées. Les préfectures sans aucun "
+    "opérateur (agences) tirent fortement la courbe des agences vers le bas."
+)
+
+gini_agences = gini_coefficient(pref_f["nb_agences"], pref_f["population_totale"])
+gini_mm = gini_coefficient(pref_f["nb_agents_mobile_money"], pref_f["population_totale"])
+
+p_pts_a, e_pts_a = lorenz_curve(pref_f["nb_agences"], pref_f["population_totale"])
+p_pts_m, e_pts_m = lorenz_curve(pref_f["nb_agents_mobile_money"], pref_f["population_totale"])
+
+n1, n2, n3 = st.columns(3)
+n1.metric("Gini — agences opérateurs", f"{gini_agences:.3f}",
+          help="0 = proportionnel à la population · 1 = totalement concentré")
+n2.metric("Gini — agents mobile money", f"{gini_mm:.3f}",
+          help="0 = proportionnel à la population · 1 = totalement concentré")
+n3.metric(
+    "Interprétation",
+    "Très inégal" if max(gini_agences, gini_mm) > 0.5 else "Modérément inégal",
+    delta="agences ≫ mobile money" if gini_agences > gini_mm else "mobile money ≫ agences",
+    delta_color="off",
+)
+
+if p_pts_a is not None:
+    fig_lorenz = px.line(x=[0, 1], y=[0, 1], labels={"x": "Part cumulée de la population", "y": "Part cumulée de l'équipement"})
+    fig_lorenz.add_trace(
+        px.line(x=np.concatenate([[0], p_pts_a.to_numpy()]), y=np.concatenate([[0], e_pts_a.to_numpy()])).data[0]
+    )
+    fig_lorenz.data[0].name = "Agences opérateurs"
+    fig_lorenz.add_trace(
+        px.line(x=np.concatenate([[0], p_pts_m.to_numpy()]), y=np.concatenate([[0], e_pts_m.to_numpy()])).data[0]
+    )
+    fig_lorenz.data[1].name = "Agents mobile money"
+    fig_lorenz.data[0].line.color = "#333333"
+    fig_lorenz.data[1].line.color = "#0072BC"
+    fig_lorenz.update_layout(
+        height=420,
+        legend=dict(orientation="h", yanchor="bottom", y=1.01),
+        xaxis=dict(range=[0, 1.02]), yaxis=dict(range=[0, 1.02]),
+        showlegend=True,
+    )
+    st.plotly_chart(fig_lorenz, width="stretch")
+else:
+    st.info("Pas assez de données pour tracer la courbe de Lorenz sur la zone filtrée.")
 
 # ---------------------------------------------------------------- Tableau
 st.markdown("#### Table détaillée")

@@ -3,6 +3,7 @@ Fonctions utilitaires partagées par le pipeline de données et les pages Stream
 """
 import unicodedata
 import re
+import numpy as np
 import pandas as pd
 
 WKT_POINT_RE = re.compile(r"POINT\s*\(\s*([\-0-9.]+)\s+([\-0-9.]+)\s*\)")
@@ -86,3 +87,31 @@ def polygon_key(prefecture: str) -> str:
 def shape_group_key(shape_name: str) -> str:
     """Clé de groupe pour une forme du GeoJSON (propriété shapeName)."""
     return SHAPE_NAME_TO_GROUP.get(shape_name, shape_name)
+
+
+def lorenz_curve(equipment, population):
+    """Courbe de Lorenz : (part cumulée population, part cumulée équipement),
+    unités triées par ratio équipement/population croissant. Retourne None si
+    pas assez de données exploitables."""
+    df = pd.DataFrame({"e": equipment, "p": population}).dropna()
+    df = df[(df["p"] > 0)]
+    if df.empty:
+        return None, None
+    df["ratio"] = df["e"] / df["p"]
+    df = df.sort_values("ratio")
+    p_tot = df["p"].sum()
+    e_tot = df["e"].sum()
+    return (
+        df["p"].cumsum() / p_tot,
+        df["e"].cumsum() / e_tot if e_tot else df["p"].cumsum() * 0,
+    )
+
+
+def gini_coefficient(equipment, population) -> float:
+    """Coefficient de Gini de l'inégalité de répartition d'un équipement face à la
+    population (ordonné par ratio équipement/population croissant). 0 = égalité
+    parfaite proportionnelle, 1 = concentration totale. NaN si invalide."""
+    p_cum, e_cum = lorenz_curve(equipment, population)
+    if p_cum is None or len(p_cum) < 2:
+        return float("nan")
+    return float(1 - 2 * np.trapezoid(e_cum, p_cum))
