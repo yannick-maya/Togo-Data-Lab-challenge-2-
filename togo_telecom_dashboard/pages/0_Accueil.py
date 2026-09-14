@@ -1,0 +1,164 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+import pandas as pd
+import plotly.express as px
+import streamlit as st
+
+from src.data_loader import (
+    COLORS,
+    get_agences,
+    get_datacenters,
+    get_kpis,
+    get_mobile_money,
+)
+from src.style_loader import FAVICON, MAP_STYLE, THEME, hero, inject_styles, page_header, sidebar_brand, style_figure
+from src.utils import format_int
+
+st.set_page_config(
+    page_title="Accueil — Diagnostic Télécoms & Inclusion Numérique",
+    page_icon=FAVICON,
+    layout="wide",
+)
+
+inject_styles()
+sidebar_brand()
+
+st.markdown(
+    page_header(
+        "radar",
+        "Diagnostic de l'accès aux télécommunications et services numériques — Togo",
+        "Cartographie des infrastructures télécoms, des points mobile money et diagnostic "
+        "des zones sous-desservies, pour éclairer les priorités d'extension de la connectivité.",
+    ),
+    unsafe_allow_html=True,
+)
+
+with st.spinner("Chargement des indicateurs clés…"):
+    kpis = get_kpis()
+
+col_hero, col_rest = st.columns([1, 3], gap="medium")
+with col_hero:
+    st.markdown(
+        hero(
+            label="Population nationale RGPH-5",
+            value=format_int(kpis["population_totale"]),
+            unit="hab.",
+            tone="accent",
+            note="Recensement INSEED, novembre 2022",
+        ),
+        unsafe_allow_html=True,
+    )
+with col_rest:
+    c2, c3, c4, c5 = st.columns(4)
+    c2.metric("Agences opérateurs", format_int(kpis["nb_agences"]),
+              help=f"Togocom : {kpis['nb_agences_togocom']} — Moov : {kpis['nb_agences_moov']}")
+    c3.metric("Agents mobile money", format_int(kpis["nb_agents_mm"]))
+    c4.metric("Datacenters recensés", format_int(kpis["nb_datacenters"]))
+    c5.metric(
+        "Cantons sans agence opérateur",
+        f"{kpis['nb_cantons_sans_agence']} / {kpis['nb_cantons']}",
+        help="Cantons ne disposant d'aucune agence physique Togocom ou Moov — "
+             "ils reposent uniquement sur des agents mobile money indépendants.",
+    )
+
+st.divider()
+
+left, right = st.columns([2, 1])
+
+with left:
+    st.markdown("#### Carte nationale des infrastructures")
+    st.caption("Agences opérateurs et datacenters — vue d'ensemble (le détail par opérateur "
+               "et les agents mobile money sont sur la page *Cartographie*).")
+
+    with st.spinner("Construction de la carte…"):
+        agences = get_agences()
+        dc = get_datacenters()
+
+        map_df = pd.concat(
+            [
+                agences[["lon", "lat", "operateur", "etab_nom", "prefecture_nom_bdd"]].rename(
+                    columns={"operateur": "type"}
+                ),
+                dc.assign(type="Datacenter")[["lon", "lat", "type", "etab_nom", "prefecture_nom_bdd"]],
+            ],
+            ignore_index=True,
+        )
+
+        fig = px.scatter_map(
+            map_df,
+            lat="lat",
+            lon="lon",
+            color="type",
+            color_discrete_map=COLORS,
+            hover_name="etab_nom",
+            hover_data={"prefecture_nom_bdd": True, "lat": False, "lon": False, "type": False},
+            zoom=6.2,
+            center={"lat": 8.6, "lon": 1.0},
+            height=520,
+        )
+        fig.update_layout(
+            map_style=MAP_STYLE,
+            margin=dict(l=0, r=0, t=0, b=0),
+            legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="left", x=0,
+                        bgcolor="rgba(0,0,0,0)", font=dict(color=THEME["text_secondary"])),
+        )
+        style_figure(fig)
+    st.plotly_chart(fig, width="stretch")
+
+    st.markdown("#### Répartition des agences par opérateur")
+    op_counts = agences["operateur"].value_counts()
+    fig_donut = px.pie(
+        values=op_counts.values,
+        names=op_counts.index.astype(str).tolist(),
+        hole=0.58,
+        color=op_counts.index.astype(str).tolist(),
+        color_discrete_map=COLORS,
+    )
+    fig_donut.update_layout(
+        height=320,
+        margin=dict(l=10, r=10, t=44, b=10),
+        legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="center", x=0.5,
+                    font=dict(size=12)),
+    )
+    fig_donut.update_traces(
+        textinfo="percent",
+        textfont=dict(size=13, color=THEME["text_primary"]),
+        textposition="inside",
+        marker=dict(line=dict(color="#FFFFFF", width=2)),
+    )
+    style_figure(fig_donut)
+    st.plotly_chart(fig_donut, width="stretch")
+    st.caption("Couleurs marques : Togocom (jaune) et Moov (rouge) — part nationale des agences.")
+
+with right:
+    st.markdown("#### Comment lire ce dashboard")
+    st.markdown(
+        """
+1. **Cartographie** — répartition spatiale des agences, datacenters et
+   agents mobile money, avec filtres région / préfecture / opérateur.
+2. **Mobile money vs population** — adéquation entre densité de points
+   mobile money et poids démographique, par préfecture.
+3. **Zones blanches** — cantons sans présence d'agence opérateur,
+   classés par priorité d'intervention.
+4. **Recommandations** — synthèse chiffrée et priorisation stratégique.
+        """
+    )
+    st.info(
+        "**Limites de données assumées** : le fichier *Agences CANAL+* fourni "
+        "est vide (0 ligne) — les points de vente réellement recensés (API "
+        "canalbox.tg + OpenStreetMap) sont ajoutés comme couche externe distincte — "
+        "et le fichier *Agences Télécom* est en réalité un doublon exact de "
+        "Togocom + Moov — il n'a donc pas été utilisé pour éviter un double "
+        "comptage. Aucune donnée officielle de couverture réseau 2G/3G/4G "
+        "n'étant disponible en open data pour le Togo, l'analyse des zones "
+        "sous-desservies repose sur un **proxy infrastructure** (présence/absence "
+        "de points de service), détaillé sur la page *Zones blanches*.",
+    )
+    st.caption(
+        "Sources : jeux de données télécoms fournis pour le challenge — Population : "
+        "INSEED Togo, RGPH-5 (2022, préfectures et cantons) — Frontières administratives : "
+        "HDX OCHA COD-AB (CC-BY-IGO)."
+    )

@@ -40,8 +40,9 @@ dans `data/raw/` ou `data/external/`), lancer en local
 
 ```
 togo_telecom_dashboard/
-├── app.py                              # Page d'accueil (Vue d'ensemble)
-├── pages/                              # Pages additionnelles du dashboard (multipage Streamlit)
+├── app.py                              # Point d'entrée (navigation Streamlit) — menu « Accueil »
+├── pages/                              # Pages du dashboard (contrôlées via st.navigation)
+│   ├── 0_Accueil.py                    # Vue d'ensemble nationale (KPIs, carte, répartition)
 │   ├── 1_Cartographie_Infrastructures.py
 │   ├── 2_Mobile_Money_vs_Population.py
 │   ├── 3_Zones_Blanches.py

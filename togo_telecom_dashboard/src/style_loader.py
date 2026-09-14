@@ -18,7 +18,7 @@ _CSS_PATH = _ASSETS_DIR / "style.css"
 FAVICON = str(_ASSETS_DIR / "favicon.svg")
 
 # Design tokens — miroir Python du :root de style.css (garder en phase).
-# Variante claire : contenu lisible, rail de navigation sombre conservé.
+# Variante claire : contenu et rail de navigation clairs et lisibles.
 THEME = {
     "bg_base": "#F6F8F7",
     "bg_panel": "#F1F5F2",
@@ -156,7 +156,12 @@ def card(title: str, value: str, subtitle: str = "", css_class: str = ""):
 
 
 def sidebar_brand():
-    """Render the control-room brand banner at the top of the sidebar."""
+    """Render the control-room brand banner at the top of the sidebar.
+
+    Affiche d'abord le logo partenaire (décoration, base64) puis la marque du
+    poste de contrôle. Appelée par chaque page : présent sur toute la navigation.
+    """
+    sidebar_logo()
     st.sidebar.markdown(
         '<div class="sidebar-brand">'
         f'<div class="sidebar-brand-icon">{svg("radar", 24)}</div>'
@@ -165,5 +170,19 @@ def sidebar_brand():
         '<div class="sidebar-brand-sub">Diagnostic &amp; inclusion numérique</div>'
         '</div>'
         '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def sidebar_logo():
+    """Logo partenaire en tête du rail — données image embarquées (base64)."""
+    logo_path = _ASSETS_DIR / "logo.png"
+    if not logo_path.exists():
+        return
+    import base64
+
+    b64 = base64.b64encode(logo_path.read_bytes()).decode("ascii")
+    st.sidebar.markdown(
+        f'<div class="sidebar-logo"><img alt="Logo" src="data:image/png;base64,{b64}" /></div>',
         unsafe_allow_html=True,
     )

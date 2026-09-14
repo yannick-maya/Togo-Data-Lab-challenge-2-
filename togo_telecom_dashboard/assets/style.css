@@ -120,6 +120,22 @@ section[data-testid="stSidebar"] hr { border-top: 1px solid var(--rail-line); ma
     margin-top: 0.12rem;
 }
 
+/* Logo partenaire en tête du rail (décoration) */
+.sidebar-logo {
+    padding: 0.55rem 0.65rem 0.65rem;
+    border-bottom: 1px solid var(--rail-line);
+    margin: 0 0.35rem 0.6rem;
+}
+.sidebar-logo img {
+    display: block;
+    max-width: 100%;
+    max-height: 54px;
+    width: auto;
+    height: auto;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
 /* Navigation : hiérarchie claire page active, pas de pilules uniformes */
 [data-testid="stSidebarNav"] { padding: 0.4rem 0.25rem; }
 [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"] {
