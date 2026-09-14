@@ -112,11 +112,14 @@ def page_header(icon_key: str, title: str, caption: str = "") -> str:
 
 
 def inject_styles():
-    """Inject the dashboard CSS once per session (idempotent)."""
-    if "_css_injected" not in st.session_state:
-        css = _CSS_PATH.read_text(encoding="utf-8")
-        st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
-        st.session_state["_css_injected"] = True
+    """Inject the dashboard CSS on every script run.
+
+    Nécessaire en multipage : la balise <style> émise par une page est retirée
+    du DOM lors de la navigation ; l'injecter à chaque exécution évite de
+    laisser une page sans style (et un rail qui « redevient » clair).
+    """
+    css = _CSS_PATH.read_text(encoding="utf-8")
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 
 def hero(label: str, value: str, note: str = "", unit: str = "", tone: str = "accent",
