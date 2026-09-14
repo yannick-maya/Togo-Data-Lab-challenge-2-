@@ -160,34 +160,44 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] p {
     color: var(--rail-text-dim);
 }
 
-/* ---------------------------------------------------------------- Metrics (lecture instrument) */
+/* ---------------------------------------------------------------- Metrics (cartes valeur, lecture instrument) */
 div[data-testid="stMetric"] {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--line);
-    border-radius: 0;
+    background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-panel) 100%);
+    border: 1px solid var(--line);
+    border-radius: 10px;
     box-shadow: none;
-    padding: 0.4rem 0.1rem 0.7rem;
-    transition: border-color 0.15s ease;
+    padding: 0.85rem 1rem 0.9rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-div[data-testid="stMetric"]:hover { border-bottom-color: var(--line-strong); }
+div[data-testid="stMetric"]:hover {
+    border-color: var(--line-strong);
+    box-shadow: 0 3px 10px rgba(27, 36, 32, 0.06);
+}
 div[data-testid="stMetric"] [data-testid="stMetricLabel"] {
-    font-size: 0.76rem;
-    font-weight: 500;
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
     color: var(--text-secondary);
     letter-spacing: 0;
     text-transform: none;
+    margin-bottom: 0.3rem;
 }
 div[data-testid="stMetric"] [data-testid="stMetricValue"] {
     font-family: var(--mono);
-    font-size: 1.45rem;
+    font-size: 1.5rem;
     font-weight: 500;
     color: var(--text-primary);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
 }
 div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     color: var(--text-secondary);
+    margin-top: 0.2rem;
+}
+@media (max-width: 768px) {
+    div[data-testid="stMetric"] { padding: 0.7rem 0.8rem 0.75rem; }
+    div[data-testid="stMetric"] [data-testid="stMetricValue"] { font-size: 1.2rem; }
 }
 
 /* ---------------------------------------------------------------- Héros / compteur d'instrument */
@@ -404,7 +414,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stCheckbox"] label
 @media (max-width: 768px) {
     h1 { font-size: 1.15rem; }
     .hero-meter .hero-value { font-size: 2rem; }
-    div[data-testid="stMetric"] [data-testid="stMetricValue"] { font-size: 1.2rem; }
     section[data-testid="stSidebar"] { max-width: 320px; }
 }
 
