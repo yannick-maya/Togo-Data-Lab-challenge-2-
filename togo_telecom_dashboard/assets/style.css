@@ -141,18 +141,6 @@ section[data-testid="stSidebar"] hr { border-top: 1px solid var(--rail-line); ma
     border-left-color: var(--rail-accent);
 }
 
-/* Bandeaux de filtres dans le rail */
-.filter-title {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--rail-text-dim);
-    letter-spacing: 0;
-    text-transform: none;
-    margin: 1.1rem 0 0.45rem;
-    padding: 0.5rem 0 0.55rem;
-    border-top: 1px solid var(--rail-line);
-}
-
 /* Widgets du rail : fond sombre cohérent */
 section[data-testid="stSidebar"] [data-baseweb="select"] > div {
     background: var(--rail-elevated);
@@ -336,6 +324,74 @@ hr { border: none; border-top: 1px solid var(--line); margin: 1.4rem 0; }
 .exec-card-red   .exec-value { color: var(--danger); }
 .exec-card-amber { border-left-color: var(--accent-primary); }
 .exec-card-amber .exec-value { color: var(--accent-ink); }
+
+/* ---------------------------------------------------------------- En-tête de page (icône + titre) */
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    margin: 0.15rem 0 0.9rem;
+}
+.page-header-icon {
+    margin-top: 0.18rem;
+    color: var(--accent-ink);
+    flex: 0 0 auto;
+}
+.page-header-icon svg { width: 22px; height: 22px; }
+.page-header-title {
+    font-family: var(--sans);
+    font-size: 1.45rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.25;
+}
+.page-header-caption {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.3rem;
+    line-height: 1.45;
+}
+@media (max-width: 768px) {
+    .page-header-title { font-size: 1.15rem; }
+}
+
+/* ---------------------------------------------------------------- Barre de filtres (bandeau partagé) */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: var(--bg-panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 0.45rem 0.9rem 0.7rem;
+    position: sticky;
+    top: 0.6rem;
+    z-index: 20;
+    box-shadow: 0 4px 14px rgba(27, 36, 32, 0.06);
+}
+.filter-bar-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0;
+    margin-bottom: 0.45rem;
+}
+.filter-bar-title svg { width: 14px; height: 14px; color: var(--accent-ink); }
+div[data-testid="stVerticalBlockBorderWrapper"] label {
+    color: var(--text-secondary);
+}
+div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stMultiSelect"] span,
+div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stSelectbox"] span,
+div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stCheckbox"] label {
+    color: var(--text-primary);
+}
+
+/* Marque : icône SVG au lieu d'un émoji */
+.sidebar-brand-icon svg {
+    width: 22px;
+    height: 22px;
+    color: var(--rail-accent);
+}
 
 /* ---------------------------------------------------------------- Widgets : focus visible */
 .stApp :focus-visible, section[data-testid="stSidebar"] :focus-visible {

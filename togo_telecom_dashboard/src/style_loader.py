@@ -9,8 +9,13 @@ hex codes page by page).
 from pathlib import Path
 import streamlit as st
 
+from src.components.icons import svg
+
 _ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
 _CSS_PATH = _ASSETS_DIR / "style.css"
+
+# Favicon de l'application (silhouette de poste de contrôle, sans émoji).
+FAVICON = str(_ASSETS_DIR / "favicon.svg")
 
 # Design tokens — miroir Python du :root de style.css (garder en phase).
 # Variante claire : contenu lisible, rail de navigation sombre conservé.
@@ -35,9 +40,11 @@ THEME = {
 MAP_STYLE = "carto-positron"
 
 # Séquences Plotly réutilisées (régions, ratios, distances, densité).
+# 6e/7e couleurs palettes existantes, ajoutées pour distinguer la 6e
+# division administrative « Grand Lomé » sans couleur hors tokens.
 REGION_COLORS = [
     THEME["accent_secondary"], "#B26B10", THEME["text_secondary"],
-    "#7456B4", THEME["danger"],
+    "#7456B4", THEME["danger"], THEME["ok"], THEME["warn"],
 ]
 RATE_SCALE = ["#CBE6DE", "#79C2B1", "#3FA08D", THEME["accent_secondary"]]
 DENS_SCALE = ["#E3EAE2", "#B7C4B4", "#D9A86A", "#B26B10"]
@@ -70,6 +77,38 @@ def style_figure(fig):
     )
     fig.update_annotations(font=dict(color=THEME["text_primary"]))
     return fig
+
+
+_region_colors_cache = None
+
+
+def region_color_map() -> dict:
+    """Une couleur par région, stable sur toutes les pages (ordre alphabétique).
+
+    Permet de comparer les graphiques régionaux d'une page à l'autre : les
+    mêmes teintes de palette tracent les mêmes régions partout.
+    """
+    global _region_colors_cache
+    if _region_colors_cache is None:
+        from src.data_loader import get_prefecture_indicators
+
+        pref = get_prefecture_indicators()
+        regs = sorted(pref["region"].dropna().unique())
+        _region_colors_cache = {
+            r: REGION_COLORS[i % len(REGION_COLORS)] for i, r in enumerate(regs)
+        }
+    return _region_colors_cache
+
+
+def page_header(icon_key: str, title: str, caption: str = "") -> str:
+    """En-tête de page : icône SVG ligne fine + titre + légende (pas d'émoji)."""
+    cap = f'<div class="page-header-caption">{caption}</div>' if caption else ""
+    return (
+        '<div class="page-header">'
+        f'<div class="page-header-icon">{svg(icon_key, 22)}</div>'
+        f'<div class="page-header-text"><div class="page-header-title">{title}</div>{cap}</div>'
+        '</div>'
+    )
 
 
 def inject_styles():
@@ -117,7 +156,7 @@ def sidebar_brand():
     """Render the control-room brand banner at the top of the sidebar."""
     st.sidebar.markdown(
         '<div class="sidebar-brand">'
-        '<div class="sidebar-brand-icon">📡</div>'
+        f'<div class="sidebar-brand-icon">{svg("radar", 24)}</div>'
         '<div>'
         '<div class="sidebar-brand-title">Togo Télécoms — NOC</div>'
         '<div class="sidebar-brand-sub">Diagnostic &amp; inclusion numérique</div>'
@@ -125,8 +164,3 @@ def sidebar_brand():
         '</div>',
         unsafe_allow_html=True,
     )
-
-
-def filter_title(label: str = "Filtres"):
-    """Styled title marking the start of the filter area in the sidebar."""
-    st.sidebar.markdown(f'<div class="filter-title">{label}</div>', unsafe_allow_html=True)

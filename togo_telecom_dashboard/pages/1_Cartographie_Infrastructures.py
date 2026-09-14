@@ -7,20 +7,25 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from src.components.filter_bar import filter_bar
 from src.data_loader import COLORS, get_agences, get_canal_plus_external, get_datacenters, get_mobile_money_par_canton
-from src.style_loader import MAP_STYLE, THEME, filter_title, hero, inject_styles, sidebar_brand, style_figure
+from src.style_loader import FAVICON, MAP_STYLE, THEME, hero, inject_styles, page_header, region_color_map, sidebar_brand, style_figure
 from src.utils import format_int
 
-st.set_page_config(page_title="Cartographie — Infrastructures", page_icon="🗺️", layout="wide")
+st.set_page_config(page_title="Cartographie — Infrastructures", page_icon=FAVICON, layout="wide")
 
 inject_styles()
 sidebar_brand()
 
-st.title("🗺️ Cartographie des infrastructures télécoms")
-st.caption(
-    "Répartition spatiale des agences Togocom / Moov, des datacenters et des agents "
-    "mobile money (agrégés par canton). Utilisez les filtres pour vous concentrer sur "
-    "une zone ou un opérateur."
+st.markdown(
+    page_header(
+        "map",
+        "Cartographie des infrastructures télécoms",
+        "Répartition spatiale des agences Togocom / Moov, des datacenters et des agents "
+        "mobile money (agrégés par canton). Utilisez les filtres pour vous concentrer sur "
+        "une zone ou un opérateur.",
+    ),
+    unsafe_allow_html=True,
 )
 
 with st.spinner("Chargement des données…"):
@@ -29,27 +34,19 @@ with st.spinner("Chargement des données…"):
     mm_canton = get_mobile_money_par_canton()
     canal = get_canal_plus_external()
 
-# ---------------------------------------------------------------- Filtres
-filter_title()
-
-regions = sorted(agences["region_nom_bdd"].dropna().unique())
-region_sel = st.sidebar.multiselect("Région", regions, default=regions)
-
-prefectures_dispo = sorted(
-    agences.loc[agences["region_nom_bdd"].isin(region_sel), "prefecture_nom_bdd"].dropna().unique()
+# ---------------------------------------------------------------- Filtres (bandeau partagé)
+filtres = filter_bar(
+    region=True, prefecture=True, operateur=True, layers=True,
+    region_options=lambda: sorted(agences["region_nom_bdd"].dropna().unique()),
+    prefecture_options=lambda rsel: agences.loc[
+        agences["region_nom_bdd"].isin(rsel), "prefecture_nom_bdd"
+    ].dropna().unique(),
 )
-prefecture_sel = st.sidebar.multiselect("Préfecture", prefectures_dispo, default=prefectures_dispo)
-
-operateurs = sorted(agences["operateur"].dropna().unique())
-operateur_sel = st.sidebar.multiselect("Opérateur (agences)", operateurs, default=operateurs)
-
-st.sidebar.markdown("---")
-show_agences = st.sidebar.checkbox("Afficher les agences opérateurs", value=True)
-show_dc = st.sidebar.checkbox("Afficher les datacenters", value=True)
-show_mm = st.sidebar.checkbox("Afficher les agents mobile money (par canton)", value=True)
-show_canal = st.sidebar.checkbox("Afficher les points CANAL+ (couche externe)", value=False,
-                                 help="Points de vente CANAL+ réellement recensés : API canalbox.tg + OpenStreetMap "
-                                      "(hors jeu de données BDD).")
+region_sel, prefecture_sel, operateur_sel = filtres.region, filtres.prefecture, filtres.operateur
+show_agences = filtres.layers["agences"]
+show_dc = filtres.layers["dc"]
+show_mm = filtres.layers["mm"]
+show_canal = filtres.layers["canal"]
 
 # ---------------------------------------------------------------- Application des filtres
 agences_f = agences[
@@ -84,7 +81,7 @@ with col_rest:
 # ---------------------------------------------------------------- Empty states
 has_layers = (show_agences and len(agences_f)) or (show_dc and len(dc_f)) or (show_mm and len(mm_f)) or (show_canal and len(canal))
 if not region_sel:
-    st.warning("Sélectionnez au moins une région dans la barre latérale pour afficher les données.")
+    st.warning("Sélectionnez au moins une région dans le bandeau de filtres pour afficher les données.")
 elif not has_layers:
     st.info("Aucune donnée à afficher pour les filtres sélectionnés. Essayez d'élargir votre sélection de région, préfecture ou opérateur.")
 
@@ -148,6 +145,65 @@ fig.update_layout(
 )
 style_figure(fig)
 st.plotly_chart(fig, width="stretch")
+
+st.divider()
+
+# ---------------------------------------------------------------- Répartition régionale
+st.markdown("#### Agences par région : volume brut et part nationale")
+st.caption(
+    "Mêmes couleurs par région que sur les autres pages (ordre alphabétique stable). "
+    "À gauche le nombre d'agences affichées, à droite leur part dans le total national."
+)
+
+agg_region = (
+    agences_f.groupby("region_nom_bdd")["etab_nom"]
+    .count()
+    .rename("nb")
+    .sort_values(ascending=False)
+)
+region_pal = region_color_map()
+
+col_reg, col_part = st.columns([1.1, 1], gap="medium")
+
+with col_reg:
+    agg_region_df = agg_region.rename_axis("region").reset_index(name="nb")
+    fig_reg = px.bar(
+        agg_region_df,
+        x="nb",
+        y="region",
+        orientation="h",
+        color="region",
+        color_discrete_map=region_pal,
+        labels={"nb": "Nombre d'agences", "region": ""},
+        height=max(280, 60 + 40 * len(agg_region)),
+    )
+    fig_reg.update_layout(showlegend=False, margin=dict(l=0, r=0, t=10, b=0))
+    style_figure(fig_reg)
+    st.plotly_chart(fig_reg, width="stretch")
+
+with col_part:
+    fig_part = px.pie(
+        values=agg_region.values,
+        names=agg_region.index,
+        hole=0.58,
+        color=agg_region.index,
+        color_discrete_map=region_pal,
+    )
+    fig_part.update_layout(
+        height=320,
+        margin=dict(l=10, r=10, t=40, b=10),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
+                    font=dict(size=11)),
+    )
+    fig_part.update_traces(
+        textinfo="percent",
+        textfont=dict(size=13, color=THEME["text_primary"]),
+        textposition="inside",
+        marker=dict(line=dict(color="#FFFFFF", width=2)),
+    )
+    style_figure(fig_part)
+    st.plotly_chart(fig_part, width="stretch")
+    st.caption("Part des agences affichées par région (%).")
 
 # ---------------------------------------------------------------- Tableau
 st.markdown("#### Détail des agences affichées")

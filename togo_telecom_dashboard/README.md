@@ -42,13 +42,17 @@ dans `data/raw/` ou `data/external/`), lancer en local
 togo_telecom_dashboard/
 ├── app.py                              # Page d'accueil (Vue d'ensemble)
 ├── pages/                              # Pages additionnelles du dashboard (multipage Streamlit)
-│   ├── 1_🗺️_Cartographie_Infrastructures.py
-│   ├── 2_📱_Mobile_Money_vs_Population.py
-│   ├── 3_📡_Zones_Blanches.py
-│   └── 4_💡_Recommandations.py
+│   ├── 1_Cartographie_Infrastructures.py
+│   ├── 2_Mobile_Money_vs_Population.py
+│   ├── 3_Zones_Blanches.py
+│   └── 4_Recommandations.py
 ├── src/
 │   ├── data_pipeline.py                # Nettoyage + calcul des indicateurs (à lancer une fois)
 │   ├── data_loader.py                  # Chargement des données préparées, avec cache Streamlit
+│   ├── style_loader.py                 # Design system : tokens, héros, styles Plotly
+│   ├── components/
+│   │   ├── filter_bar.py               # Barre de filtres horizontale partagée (persistance session_state)
+│   │   └── icons.py                    # Icônes SVG ligne fine (aucun émoji dans l'app)
 │   └── utils.py                        # Fonctions utilitaires (parsing WKT, mapping préfectures)
 ├── data/
 │   ├── raw/                            # Fichiers bruts fournis pour le challenge (inchangés)
@@ -89,10 +93,10 @@ togo_telecom_dashboard/
   ≈ 3,4 M d'habitants).
 - **Inégalités de répartition** : courbes de Lorenz et coefficients de Gini
   agences opérateurs (0,38) et agents mobile money (0,31) vs population.
-- **Score de priorisation paramétrable** : combinaison pondérée (barre
-  latérale) de la démographie, de la sous-desserte physique, de
-  l'éloignement moyen et des cantons déjà identifiés — chaque composante
-  normalisée en 0-1.
+- **Score de priorisation paramétrable** : combinaison pondérée (curseurs
+  en tête de la page *Recommandations*) de la démographie, de la
+  sous-desserte physique, de l'éloignement moyen et des cantons déjà
+  identifiés — chaque composante normalisée en 0-1.
 - **Zones blanches** : aucune donnée officielle de couverture réseau
   2G/3G/4G n'est disponible en open data pour le Togo. Le dashboard utilise
   donc un **proxy infrastructure** (absence d'agence physique + faible
@@ -106,7 +110,7 @@ togo_telecom_dashboard/
 |---|---|
 | **C1 — Ergonomie, clarté visuelle, navigation** | Structure multipage claire (Accueil → Cartographie → Mobile money → Zones blanches → Recommandations), KPIs en en-tête, thème visuel cohérent, notes méthodologiques visibles sans encombrer les graphiques. |
 | **C2 — Pertinence des analyses, compréhension des données, qualité des conclusions** | Détection et traitement explicite des anomalies du jeu de données (doublon Télécom, CANAL+ vide → couche externe issue de canalbox.tg + OSM), désagrégation de la population RGPH-5 au niveau canton (exact + flou documenté), distances orthodromiques à l'équipement le plus proche, inégalités de répartition (Lorenz/Gini), score de priorisation transparent, pondéré et reproductible en page *Recommandations*. |
-| **C3 — Richesse des interactions, filtres, fluidité** | Filtres région / préfecture / opérateur / statut de desserte / couches (dont CANAL+ externe) sur la carte, coloration des cantons au choix (statut, densité, distance), cartes interactives (zoom, survol), tableaux triables, curseurs de pondération du score de priorité, sélection dynamique du nombre de résultats affichés. |
+| **C3 — Richesse des interactions, filtres, fluidité** | Filtres globaux persistants dans un bandeau horizontal partagé en tête du contenu (région, préfecture, opérateur, statut de desserte, couches dont CANAL+ externe, coloration des cantons), cartes interactives (zoom, survol), tableaux triables, curseurs de pondération du score de priorité, visualisations régionales comparables d'une page à l'autre (mêmes couleurs par région, même tri par population). |
 | **C4 — Structure, clarté, méthodologie du rapport** | Les choix méthodologiques et leurs limites sont documentés à trois niveaux : ce README, `data/external/README_donnees_externes.md`, et directement dans l'interface (encadrés d'avertissement contextuels). À reprendre dans le rapport PowerPoint associé. |
 
 ## Notes pour aller plus loin (hors délai du challenge)

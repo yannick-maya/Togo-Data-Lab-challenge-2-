@@ -8,24 +8,36 @@ import plotly.express as px
 import streamlit as st
 
 from src.data_loader import get_canton_indicators, get_prefecture_indicators
-from src.style_loader import REGION_COLORS, card, hero, inject_styles, sidebar_brand, style_figure
+from src.style_loader import FAVICON, REGION_COLORS, card, hero, inject_styles, page_header, sidebar_brand, style_figure
 from src.utils import format_int
 
-st.set_page_config(page_title="Recommandations", page_icon="💡", layout="wide")
+st.set_page_config(page_title="Recommandations", page_icon=FAVICON, layout="wide")
 
 inject_styles()
 sidebar_brand()
 
-# ---------------------------------------------------------------- Score paramétrable (P1.4)
-st.sidebar.subheader("Score de priorité — poids")
-st.sidebar.caption("0 = ignore ce critère. Ajustez pour explorer différents scénarios.")
-w_pop = st.sidebar.slider("Poids démographique", 0.0, 3.0, 1.0, 0.5)
-w_agences = st.sidebar.slider("Faible densité d'agences", 0.0, 3.0, 1.0, 0.5)
-w_mm = st.sidebar.slider("Faible densité d'agents mobile money", 0.0, 3.0, 1.0, 0.5)
-w_dist = st.sidebar.slider("Éloignement des agences (dist. moyenne)", 0.0, 3.0, 1.0, 0.5)
-w_cantons = st.sidebar.slider("Cantons prioritaires déjà identifiés", 0.0, 3.0, 1.0, 0.5)
+st.markdown(
+    page_header(
+        "target",
+        "Synthèse et recommandations stratégiques",
+    ),
+    unsafe_allow_html=True,
+)
 
-st.title("💡 Synthèse et recommandations stratégiques")
+# ---------------------------------------------------------------- Score paramétrable (P1.4)
+st.markdown("#### Paramétrer le score de priorité")
+st.caption("Poids des critères (0 = ignore ce critère). Ajustez pour explorer différents scénarios.")
+w_pop, w_agences, w_mm, w_dist, w_cantons = st.columns(5)
+with w_pop:
+    w_pop = st.slider("Poids démographique", 0.0, 3.0, 1.0, 0.5)
+with w_agences:
+    w_agences = st.slider("Faible densité d'agences", 0.0, 3.0, 1.0, 0.5)
+with w_mm:
+    w_mm = st.slider("Faible densité d'agents MM", 0.0, 3.0, 1.0, 0.5)
+with w_dist:
+    w_dist = st.slider("Éloignement des agences", 0.0, 3.0, 1.0, 0.5)
+with w_cantons:
+    w_cantons = st.slider("Cantons prioritaires", 0.0, 3.0, 1.0, 0.5)
 
 with st.spinner("Calcul des scores de priorité…"):
     pref = get_prefecture_indicators()
@@ -160,7 +172,7 @@ st.divider()
 # ---------------------------------------------------------------- Top 5 scores
 st.markdown("#### Préfectures prioritaires pour l'extension de la connectivité")
 st.caption(
-    "Score paramétrable (barre latérale) combinant poids démographique, faible "
+    "Score paramétrable (poids ci-dessus) combinant poids démographique, faible "
     "densité d'agences opérateurs et d'agents mobile money, éloignement moyen de "
     "l'agence la plus proche et nombre de cantons déjà identifiés comme "
     "sous-desservis (chaque composante normalisée 0-1, pondérée par son curseur). "

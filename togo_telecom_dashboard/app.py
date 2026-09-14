@@ -14,26 +14,27 @@ from src.data_loader import (
     get_kpis,
     get_mobile_money,
 )
-from src.style_loader import MAP_STYLE, THEME, hero, inject_styles, sidebar_brand, style_figure
+from src.style_loader import FAVICON, MAP_STYLE, THEME, hero, inject_styles, page_header, sidebar_brand, style_figure
 from src.utils import format_int
 
 st.set_page_config(
     page_title="Diagnostic Télécoms & Inclusion Numérique — Togo",
-    page_icon="📡",
+    page_icon=FAVICON,
     layout="wide",
 )
 
 inject_styles()
 sidebar_brand()
 
-st.title("📡 Diagnostic de l'accès aux télécommunications et services numériques — Togo")
-st.caption(
-    "Cartographie des infrastructures télécoms, des points mobile money et diagnostic "
-    "des zones sous-desservies, pour éclairer les priorités d'extension de la connectivité."
+st.markdown(
+    page_header(
+        "radar",
+        "Diagnostic de l'accès aux télécommunications et services numériques — Togo",
+        "Cartographie des infrastructures télécoms, des points mobile money et diagnostic "
+        "des zones sous-desservies, pour éclairer les priorités d'extension de la connectivité.",
+    ),
+    unsafe_allow_html=True,
 )
-
-with st.spinner("Chargement des indicateurs clés…"):
-    kpis = get_kpis()
 
 with st.spinner("Chargement des indicateurs clés…"):
     kpis = get_kpis()
@@ -107,6 +108,31 @@ with left:
         style_figure(fig)
     st.plotly_chart(fig, width="stretch")
 
+    st.markdown("#### Répartition des agences par opérateur")
+    op_counts = agences["operateur"].value_counts()
+    fig_donut = px.pie(
+        values=op_counts.values,
+        names=op_counts.index.astype(str).tolist(),
+        hole=0.58,
+        color=op_counts.index.astype(str).tolist(),
+        color_discrete_map=COLORS,
+    )
+    fig_donut.update_layout(
+        height=320,
+        margin=dict(l=10, r=10, t=44, b=10),
+        legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="center", x=0.5,
+                    font=dict(size=12)),
+    )
+    fig_donut.update_traces(
+        textinfo="percent",
+        textfont=dict(size=13, color=THEME["text_primary"]),
+        textposition="inside",
+        marker=dict(line=dict(color="#FFFFFF", width=2)),
+    )
+    style_figure(fig_donut)
+    st.plotly_chart(fig_donut, width="stretch")
+    st.caption("Couleurs marques : Togocom (jaune) et Moov (rouge) — part nationale des agences.")
+
 with right:
     st.markdown("#### Comment lire ce dashboard")
     st.markdown(
@@ -130,7 +156,6 @@ with right:
         "n'étant disponible en open data pour le Togo, l'analyse des zones "
         "sous-desservies repose sur un **proxy infrastructure** (présence/absence "
         "de points de service), détaillé sur la page *Zones blanches*.",
-        icon="ℹ️",
     )
     st.caption(
         "Sources : jeux de données télécoms fournis pour le challenge — Population : "

@@ -7,16 +7,23 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from src.components.filter_bar import filter_bar
 from src.data_loader import COLORS, get_canton_indicators
-from src.style_loader import DENS_SCALE, DIST_SCALE, MAP_STYLE, REGION_COLORS, THEME, filter_title, hero, inject_styles, sidebar_brand, style_figure
+from src.style_loader import DENS_SCALE, DIST_SCALE, MAP_STYLE, REGION_COLORS, THEME, FAVICON, hero, inject_styles, page_header, sidebar_brand, style_figure
 from src.utils import format_int
 
-st.set_page_config(page_title="Zones blanches", page_icon="📡", layout="wide")
+st.set_page_config(page_title="Zones blanches", page_icon=FAVICON, layout="wide")
 
 inject_styles()
 sidebar_brand()
 
-st.title("📡 Identification des zones sous-desservies")
+st.markdown(
+    page_header(
+        "activity",
+        "Identification des zones sous-desservies",
+    ),
+    unsafe_allow_html=True,
+)
 
 st.warning(
     "**Note méthodologique** — Aucune donnée officielle de couverture réseau "
@@ -27,29 +34,21 @@ st.warning(
     "**zone prioritaire** lorsqu'il cumule cette absence avec un nombre "
     "d'agents mobile money parmi les plus faibles du pays (quartile "
     "inférieur). Ce n'est pas une mesure de couverture radio réelle.",
-    icon="⚠️",
 )
 
 with st.spinner("Chargement des indicateurs canton…"):
     cantons = get_canton_indicators()
 
-regions = sorted(cantons["region_nom_bdd"].unique())
-filter_title()
-region_sel = st.sidebar.multiselect("Région", regions, default=regions)
-
-prefectures_dispo = sorted(
-    cantons.loc[cantons["region_nom_bdd"].isin(region_sel), "prefecture_nom_bdd"].dropna().unique()
+# ---------------------------------------------------------------- Filtres (bandeau partagé)
+filtres = filter_bar(
+    region=True, prefecture=True, statut=True, color_by=True,
+    region_options=lambda: sorted(cantons["region_nom_bdd"].dropna().unique()),
+    prefecture_options=lambda rsel: cantons.loc[
+        cantons["region_nom_bdd"].isin(rsel), "prefecture_nom_bdd"
+    ].dropna().unique(),
 )
-prefecture_sel = st.sidebar.multiselect("Préfecture", prefectures_dispo, default=prefectures_dispo)
-
-statuts_dispo = ["Zone prioritaire", "Sans agence (hors priorité haute)", "Desserte correcte"]
-statut_sel = st.sidebar.multiselect("Statut de desserte", statuts_dispo, default=statuts_dispo)
-
-color_by = st.sidebar.radio(
-    "Coloration des cantons",
-    ["Statut de desserte", "Densité de population (hab./km²)", "Distance à la plus proche agence"],
-    help="Densité et distance ne sont disponibles que pour les cantons avec population / distance calculée.",
-)
+region_sel, prefecture_sel, statut_sel = filtres.region, filtres.prefecture, filtres.statut
+color_by = filtres.color_by
 
 cantons_f = cantons[cantons["region_nom_bdd"].isin(region_sel)].copy()
 cantons_f = cantons_f[cantons_f["prefecture_nom_bdd"].isin(prefecture_sel)]
@@ -62,7 +61,7 @@ cantons_f.loc[
 cantons_f = cantons_f[cantons_f["statut"].isin(statut_sel)]
 
 if cantons_f.empty:
-    st.warning("Aucun canton ne correspond aux filtres sélectionnés. Modifiez la sélection dans la barre latérale.")
+    st.warning("Aucun canton ne correspond aux filtres sélectionnés. Modifiez la sélection dans le bandeau de filtres.")
     st.stop()
 
 col_hero, col_rest = st.columns([1, 2], gap="medium")
