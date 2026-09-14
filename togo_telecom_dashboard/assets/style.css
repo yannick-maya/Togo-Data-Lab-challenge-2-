@@ -1,27 +1,37 @@
 /* ================================================================
-   Togo Telecom Dashboard — Control-Room Design System
-   Sombre, esprit NOC. Tokens dans :root, sélecteurs par data-testid.
+   Togo Telecom Dashboard — NOC Design System, variante claire
+   Rail de navigation sombre conservé ; contenu en clair, lisible.
+   Tokens dans :root, sélecteurs par data-testid.
    ================================================================ */
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
 
 /* ---------- Design tokens ---------- */
 :root {
-    --bg-base:      #0E1613;   /* fond app — noir à peine teinté de vert */
-    --bg-panel:     #16211D;   /* panneaux, plancher des visuels */
-    --bg-elevated:  #1D2A24;   /* sur-élévations, survols */
-    --bg-rail:      #0B1210;   /* rail latéral de navigation */
-    --line:         #24332C;   /* filets discrets */
-    --line-strong:  #2E4239;   /* bordures lisibles */
-    --text-primary:   #EDEDE7;
-    --text-secondary: #8FA098;
-    --text-faint:     #77887E;
-    --accent-primary: #E8A33D; /* cuivre/ambre — signal fort unique par écran */
-    --accent-secondary: #4FD1C5; /* réseaux, connections */
-    --danger:       #DD5F52;   /* déficit réel, jamais décoration */
-    --ok:           #57B98A;
-    --warn:         #C58F5C;
+    /* Contenu (clair) */
+    --bg-base:      #F6F8F7;   /* fond app — gris-vert très clair */
+    --bg-panel:     #F1F5F2;   /* panneaux, plancher des visuels */
+    --bg-elevated:  #FFFFFF;   /* sur-élévations, survols */
+    --line:         #D9E1DA;   /* filets discrets */
+    --line-strong:  #C3CFC6;   /* bordures lisibles */
+    --text-primary:   #1B2420;
+    --text-secondary: #56655C;
+    --text-faint:     #7A8A81;
+    --accent-primary: #E8A33D;   /* cuivre/ambre — bordures, signaux */
+    --accent-ink:     #A16100;   /* variante texte du cuivre (contraste AA) */
+    --accent-secondary: #0E9A8E; /* réseaux, connections */
+    --danger:       #C24538;   /* déficit réel, jamais décoration */
+    --ok:           #2E8B67;
+    --warn:         #A8752B;
     --mono: "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
     --sans: "IBM Plex Sans", "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+    /* Rail de navigation (sombre, conservé) */
+    --rail-bg:      #0B1210;
+    --rail-elevated:#16211D;
+    --rail-line:    #24332C;
+    --rail-text:    #EDEDE7;
+    --rail-text-dim:#8FA098;
+    --rail-accent:  #E8A33D;
 }
 
 /* ---------- Typographie ---------- */
@@ -35,7 +45,7 @@ h1, h2, h3, h4, h5, h6 {
 h1 { font-size: 1.45rem; font-weight: 600; margin-bottom: 0.4rem; }
 h2 { font-size: 1.2rem;  font-weight: 600; margin: 1.4rem 0 0.5rem; }
 h3 { font-size: 1.05rem; font-weight: 600; margin: 1.2rem 0 0.4rem; }
-/* Titres de section = libellé de canal d'instrument (filet, pas d'eyebrow) */
+/* Titres de section = libellé de canal (filet, pas d'eyebrow) */
 h4 {
     font-size: 0.95rem;
     font-weight: 600;
@@ -52,8 +62,8 @@ html, body, .stApp { background: var(--bg-base); }
 
 [data-testid="stAppViewContainer"] {
     background:
-        radial-gradient(1100px 520px at 85% -10%, rgba(58, 122, 96, 0.16) 0%, transparent 55%),
-        radial-gradient(900px 480px at -10% 110%, rgba(232, 163, 61, 0.06) 0%, transparent 50%),
+        radial-gradient(1100px 520px at 85% -10%, rgba(14, 154, 142, 0.06) 0%, transparent 55%),
+        radial-gradient(900px 480px at -10% 110%, rgba(232, 163, 61, 0.07) 0%, transparent 50%),
         var(--bg-base);
     color: var(--text-primary);
 }
@@ -61,16 +71,25 @@ html, body, .stApp { background: var(--bg-base); }
 [data-testid="stHeader"] { background: transparent; }
 [data-testid="stToolbar"], [data-testid="stDecoration"] { display: none; }
 
-/* ---------------------------------------------------------------- Sidebar / rail */
+/* ---------------------------------------------------------------- Sidebar / rail sombre */
 section[data-testid="stSidebar"] {
-    background: var(--bg-rail);
-    border-right: 1px solid var(--line);
+    background: var(--rail-bg);
+    border-right: 1px solid var(--rail-line);
+    --background-color: var(--rail-bg);
+    --secondary-background-color: var(--rail-elevated);
+    --text-color: var(--rail-text);
+    --primary-color: var(--rail-accent);
 }
 
 section[data-testid="stSidebar"] .stMarkdown h1,
-section[data-testid="stSidebar"] .stMarkdown h2 { color: var(--text-primary); }
+section[data-testid="stSidebar"] .stMarkdown h2,
+section[data-testid="stSidebar"] .stMarkdown p,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] div {
+    color: var(--rail-text);
+}
 
-section[data-testid="stSidebar"] hr { border-top: 1px solid var(--line); margin: 0.9rem 0; }
+section[data-testid="stSidebar"] hr { border-top: 1px solid var(--rail-line); margin: 0.9rem 0; }
 
 /* Marque du poste de contrôle */
 .sidebar-brand {
@@ -78,7 +97,7 @@ section[data-testid="stSidebar"] hr { border-top: 1px solid var(--line); margin:
     align-items: center;
     gap: 0.7rem;
     padding: 0.85rem 0.5rem 0.9rem;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--rail-line);
     margin: 0 0.35rem 0.6rem;
 }
 .sidebar-brand-icon {
@@ -89,14 +108,14 @@ section[data-testid="stSidebar"] hr { border-top: 1px solid var(--line); margin:
 .sidebar-brand-title {
     font-family: var(--sans);
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--rail-text);
     font-size: 0.95rem;
     line-height: 1.2;
     letter-spacing: 0;
 }
 .sidebar-brand-sub {
     font-size: 0.72rem;
-    color: var(--text-secondary);
+    color: var(--rail-text-dim);
     line-height: 1.25;
     margin-top: 0.12rem;
 }
@@ -104,7 +123,7 @@ section[data-testid="stSidebar"] hr { border-top: 1px solid var(--line); margin:
 /* Navigation : hiérarchie claire page active, pas de pilules uniformes */
 [data-testid="stSidebarNav"] { padding: 0.4rem 0.25rem; }
 [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"] {
-    color: var(--text-secondary);
+    color: var(--rail-text-dim);
     font-weight: 500;
     border-radius: 6px;
     padding: 0.4rem 0.6rem;
@@ -113,34 +132,44 @@ section[data-testid="stSidebar"] hr { border-top: 1px solid var(--line); margin:
     transition: background 0.15s ease, color 0.15s ease;
 }
 [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"]:hover {
-    color: var(--text-primary);
-    background: var(--bg-panel);
+    color: var(--rail-text);
+    background: var(--rail-elevated);
 }
 [data-testid="stSidebarNav"] a[data-testid="stSidebarNavLink"][aria-current="page"] {
-    color: var(--text-primary);
-    background: var(--bg-panel);
-    border-left-color: var(--accent-primary);
+    color: var(--rail-text);
+    background: var(--rail-elevated);
+    border-left-color: var(--rail-accent);
 }
 
-/* Bandeaux de filtres : groupes visuellement distincts */
+/* Bandeaux de filtres dans le rail */
 .filter-title {
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--rail-text-dim);
     letter-spacing: 0;
     text-transform: none;
     margin: 1.1rem 0 0.45rem;
     padding: 0.5rem 0 0.55rem;
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--rail-line);
 }
 
+/* Widgets du rail : fond sombre cohérent */
 section[data-testid="stSidebar"] [data-baseweb="select"] > div {
-    background: var(--bg-elevated);
-    border-color: var(--line-strong);
+    background: var(--rail-elevated);
+    border-color: var(--rail-line);
 }
-section[data-testid="stSidebar"] label {
-    color: var(--text-secondary);
-    letter-spacing: 0;
+section[data-testid="stSidebar"] [data-baseweb="select"] [data-testid="stSelectbox"] span,
+section[data-testid="stSidebar"] [data-baseweb="select"] span {
+    color: var(--rail-text);
+}
+section[data-testid="stSidebar"] [data-testid="stMultiSelect"] span,
+section[data-testid="stSidebar"] [data-testid="stCheckbox"] label,
+section[data-testid="stSidebar"] [data-testid="stRadio"] label,
+section[data-testid="stSidebar"] [data-testid="stSlider"] label {
+    color: var(--rail-text);
+}
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"] p {
+    color: var(--rail-text-dim);
 }
 
 /* ---------------------------------------------------------------- Metrics (lecture instrument) */
@@ -195,7 +224,7 @@ div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
     font-family: var(--mono);
     font-size: 2.5rem;
     font-weight: 500;
-    color: var(--accent-primary);
+    color: var(--accent-ink);
     letter-spacing: -0.02em;
     line-height: 1.05;
     margin-top: 0.5rem;
@@ -223,9 +252,9 @@ div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
     100% { box-shadow: 0 0 0 0 rgba(232, 163, 61, 0); }
 }
 @keyframes pulse-danger {
-    0%   { box-shadow: 0 0 0 0 rgba(221, 95, 82, 0.45); }
-    70%  { box-shadow: 0 0 0 9px rgba(221, 95, 82, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(221, 95, 82, 0); }
+    0%   { box-shadow: 0 0 0 0 rgba(194, 69, 56, 0.45); }
+    70%  { box-shadow: 0 0 0 9px rgba(194, 69, 56, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(194, 69, 56, 0); }
 }
 
 /* ---------------------------------------------------------------- Panneaux */
@@ -238,7 +267,7 @@ div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
 }
 
 div[data-testid="stPlotlyChart"] {
-    background: var(--bg-panel);
+    background: var(--bg-elevated);
     border: 1px solid var(--line);
     border-radius: 8px;
     padding: 0.35rem;
@@ -263,8 +292,7 @@ div[data-testid="stAlert"] {
     border: 1px solid var(--line-strong);
     color: var(--text-primary);
 }
-div[data-testid="stAlert"][data-testid="stAlert"] p { color: var(--text-primary); }
-[data-testid="stAlert"][data-baseweb] svg { opacity: 0.9; }
+div[data-testid="stAlert"] p { color: var(--text-primary); }
 div[data-testid="stInfo"] { border-left: 3px solid var(--accent-secondary); }
 div[data-testid="stWarning"] { border-left: 3px solid var(--warn); }
 div[data-testid="stError"] { border-left: 3px solid var(--danger); }
@@ -304,15 +332,14 @@ hr { border: none; border-top: 1px solid var(--line); margin: 1.4rem 0; }
     margin: 0.5rem 0 0.2rem;
     color: var(--text-primary);
 }
-.exec-card .exec-label:last-child + * { margin-top: 0.35rem; }
 .exec-card-red   { border-left-color: var(--danger); }
 .exec-card-red   .exec-value { color: var(--danger); }
 .exec-card-amber { border-left-color: var(--accent-primary); }
-.exec-card-amber .exec-value { color: var(--accent-primary); }
+.exec-card-amber .exec-value { color: var(--accent-ink); }
 
 /* ---------------------------------------------------------------- Widgets : focus visible */
 .stApp :focus-visible, section[data-testid="stSidebar"] :focus-visible {
-    outline: 2px solid var(--accent-primary);
+    outline: 2px solid var(--accent-ink);
     outline-offset: 2px;
     border-radius: 4px;
 }

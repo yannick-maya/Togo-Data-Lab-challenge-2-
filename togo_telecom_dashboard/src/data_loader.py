@@ -18,11 +18,11 @@ PROCESSED = ROOT / "data" / "processed"
 COLORS = {
     "Togocom": "#F7B500",       # jaune Togocom (marque)
     "Moov": "#E30613",          # rouge Moov (marque)
-    "Mobile money": "#4FD1C5",
-    "Datacenter": "#9B7EDE",
-    "CANAL+ (externe)": "#D6709E",
-    "Zone prioritaire": "#DD5F52",
-    "Bonne desserte": "#57B98A",
+    "Mobile money": "#0E9A8E",
+    "Datacenter": "#7456B4",
+    "CANAL+ (externe)": "#C2558C",
+    "Zone prioritaire": "#C24538",
+    "Bonne desserte": "#2E8B67",
 }
 
 

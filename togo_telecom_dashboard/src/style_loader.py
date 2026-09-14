@@ -13,33 +13,35 @@ _ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
 _CSS_PATH = _ASSETS_DIR / "style.css"
 
 # Design tokens — miroir Python du :root de style.css (garder en phase).
+# Variante claire : contenu lisible, rail de navigation sombre conservé.
 THEME = {
-    "bg_base": "#0E1613",
-    "bg_panel": "#16211D",
-    "bg_elevated": "#1D2A24",
-    "text_primary": "#EDEDE7",
-    "text_secondary": "#8FA098",
-    "text_faint": "#77887E",
+    "bg_base": "#F6F8F7",
+    "bg_panel": "#F1F5F2",
+    "bg_elevated": "#FFFFFF",
+    "text_primary": "#1B2420",
+    "text_secondary": "#56655C",
+    "text_faint": "#7A8A81",
     "accent_primary": "#E8A33D",
-    "accent_secondary": "#4FD1C5",
-    "danger": "#DD5F52",
-    "ok": "#57B98A",
-    "warn": "#C58F5C",
-    "line": "#24332C",
-    "line_strong": "#2E4239",
+    "accent_ink": "#A16100",
+    "accent_secondary": "#0E9A8E",
+    "danger": "#C24538",
+    "ok": "#2E8B67",
+    "warn": "#A8752B",
+    "line": "#D9E1DA",
+    "line_strong": "#C3CFC6",
 }
 
-# Fond de carte sombre cohérent avec le thème NOC.
-MAP_STYLE = "carto-darkmatter"
+# Fond de carte clair cohérent avec la variante claire du thème.
+MAP_STYLE = "carto-positron"
 
 # Séquences Plotly réutilisées (régions, ratios, distances, densité).
 REGION_COLORS = [
-    THEME["accent_secondary"], THEME["accent_primary"], THEME["text_secondary"],
-    "#9B7EDE", THEME["danger"],
+    THEME["accent_secondary"], "#B26B10", THEME["text_secondary"],
+    "#7456B4", THEME["danger"],
 ]
-RATE_SCALE = ["#1E3330", "#2E5A50", "#3F8A78", THEME["accent_secondary"]]
-DENS_SCALE = ["#24332C", "#5F6E66", "#A9B2A3", THEME["accent_primary"]]
-DIST_SCALE = ["#1F2B27", "#8A5A2E", "#D9A441", THEME["accent_primary"]]
+RATE_SCALE = ["#CBE6DE", "#79C2B1", "#3FA08D", THEME["accent_secondary"]]
+DENS_SCALE = ["#E3EAE2", "#B7C4B4", "#D9A86A", "#B26B10"]
+DIST_SCALE = ["#E3EAE2", "#C19B5E", "#C07A1D", "#8A5A00"]
 DASH_COLOR = THEME["text_secondary"]
 
 
